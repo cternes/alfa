@@ -8,7 +8,10 @@ public class LogEntryTest {
 
 	@Test
 	public void testSeverityMapping() {
-		LogEntry logEntry = createLogEntry("1");
+		LogEntry logEntry = createLogEntry("0");
+		assertEquals("Undefined", logEntry.getSeverity());
+		
+		logEntry = createLogEntry("1");
 		assertEquals("Critical", logEntry.getSeverity());
 		
 		logEntry = createLogEntry("2");
@@ -22,6 +25,9 @@ public class LogEntryTest {
 		
 		logEntry = createLogEntry("5");
 		assertEquals("Verbose", logEntry.getSeverity());
+		
+		logEntry = createLogEntry("foo");
+		assertEquals("Undefined", logEntry.getSeverity());
 	}
 
 	private LogEntry createLogEntry(String level) {

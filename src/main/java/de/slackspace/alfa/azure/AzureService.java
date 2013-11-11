@@ -1,13 +1,10 @@
 package de.slackspace.alfa.azure;
 
-import java.net.URISyntaxException;
-import java.security.InvalidKeyException;
 import java.util.Calendar;
 import java.util.TimeZone;
 
 import com.microsoft.windowsazure.services.core.Configuration;
 import com.microsoft.windowsazure.services.core.ServiceException;
-import com.microsoft.windowsazure.services.core.storage.CloudStorageAccount;
 import com.microsoft.windowsazure.services.table.TableConfiguration;
 import com.microsoft.windowsazure.services.table.TableContract;
 import com.microsoft.windowsazure.services.table.TableService;
@@ -24,27 +21,19 @@ public class AzureService {
 	private static AzureService INSTANCE;
 	private TableContract tableContract;
 	
-	private AzureService(CloudStorageAccount account, TableContract contract) {
+	private AzureService(TableContract contract) {
 		this.tableContract = contract;
 	}
 	
 	public static AzureService create(String accountName, String accountKey, String accountUrl) {
 		if(INSTANCE == null) {
-			try {
-				CloudStorageAccount account = CloudStorageAccount.parse("DefaultEndpointsProtocol=https;AccountName="+ accountName +";AccountKey=" + accountKey);
-				
-				Configuration config = Configuration.getInstance();
-				config.setProperty(TableConfiguration.ACCOUNT_NAME, accountName);
-				config.setProperty(TableConfiguration.ACCOUNT_KEY, accountKey);
-				config.setProperty(TableConfiguration.URI, accountUrl);
-				TableContract contract = TableService.create(config);
-				
-				return new AzureService(account, contract);
-			} catch (InvalidKeyException e) {
-				throw new IllegalArgumentException("Could not create AzureService. Accountname or Accountkey incorrect.");
-			} catch (URISyntaxException e) {
-				throw new IllegalArgumentException("Could not create AzureService. Accountname or Accountkey incorrect.");
-			}
+			Configuration config = Configuration.getInstance();
+			config.setProperty(TableConfiguration.ACCOUNT_NAME, accountName);
+			config.setProperty(TableConfiguration.ACCOUNT_KEY, accountKey);
+			config.setProperty(TableConfiguration.URI, accountUrl);
+			TableContract contract = TableService.create(config);
+			
+			return new AzureService(contract);
 		}
 		
 		return INSTANCE;

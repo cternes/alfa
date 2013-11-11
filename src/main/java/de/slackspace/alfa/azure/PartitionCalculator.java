@@ -4,6 +4,8 @@ import java.util.Calendar;
 
 public class PartitionCalculator {
 
+	private PartitionCalculator() {}
+	
 	public static String calculatePartitionKeyFor(Calendar calendar) {
 		if(calendar != null) {
 			//simulate c# ticks

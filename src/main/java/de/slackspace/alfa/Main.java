@@ -12,8 +12,7 @@ public class Main {
 		try {
 			new Alfa();
 		} catch (Exception e) {
-			LOGGER.error("An error occurred", e);
-			System.exit(-1);
+			LOGGER.error("An error occurred.", e);
 		}
 	}
 }

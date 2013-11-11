@@ -5,6 +5,8 @@ import com.microsoft.windowsazure.services.table.models.Entity;
 import de.slackspace.alfa.date.DateFormatter;
 
 public class LogEntryMapper {
+	
+	private LogEntryMapper() {}
 
 	public static LogEntry mapToLogEntry(Entity entity) {
 		LogEntry entry = new LogEntry();
