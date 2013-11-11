@@ -9,10 +9,16 @@ public class DateFormatter {
 	private static SimpleDateFormat DATEFORMATTER_SECOND = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	
 	public static String toYYYYMMDD(Date date) {
-		return DATEFORMATTER_DAY.format(date);
+		if(date != null) {
+			return DATEFORMATTER_DAY.format(date);
+		}
+		return "";
 	}
 	
 	public static String toYYYYMMDDHHMMSS(Date date) {
-		return DATEFORMATTER_SECOND.format(date);
+		if(date != null) {
+			return DATEFORMATTER_SECOND.format(date);
+		}
+		return "";
 	}
 }
