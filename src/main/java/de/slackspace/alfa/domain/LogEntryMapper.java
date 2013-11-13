@@ -1,6 +1,6 @@
 package de.slackspace.alfa.domain;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import com.microsoft.windowsazure.services.table.models.Entity;
 
@@ -10,7 +10,7 @@ public class LogEntryMapper {
 	
 	private LogEntryMapper() {}
 
-	public static LogEntry mapToLogEntry(Entity entity, HashMap<String,String> deploymentMap) {
+	public static LogEntry mapToLogEntry(Entity entity, Map<String,String> deploymentMap) {
 		LogEntry entry = new LogEntry();
 		entry.setLevel(entity.getProperty("Level").getValue().toString());
 		entry.setMessage(entity.getProperty("Message").getValue().toString());

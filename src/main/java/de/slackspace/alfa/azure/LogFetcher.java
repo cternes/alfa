@@ -1,6 +1,7 @@
 package de.slackspace.alfa.azure;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import de.slackspace.alfa.domain.LogEntry;
 import de.slackspace.alfa.domain.LogEntryMapper;
 import de.slackspace.alfa.domain.TableResultPartial;
 import de.slackspace.alfa.elasticsearch.LogForwarder;
+import de.slackspace.alfa.exception.ConfigurationException;
 import de.slackspace.alfa.exception.ConnectionException;
 import de.slackspace.alfa.properties.PropertyHandler;
 
@@ -44,25 +46,25 @@ public class LogFetcher implements Runnable {
 		String accountUrl = properties.getProperty("accountUrl");
 		
 		if(accountName == null || accountName.isEmpty()) {
-			throw new RuntimeException("The properties file is missing the accountName property.");
+			throw new ConfigurationException("The properties file is missing the accountName property.");
 		}
 		if(accountKey == null || accountKey.isEmpty()) {
-			throw new RuntimeException("The properties file is missing the accountKey property.");
+			throw new ConfigurationException("The properties file is missing the accountKey property.");
 		}
 		if(accountUrl == null || accountUrl.isEmpty()) {
-			throw new RuntimeException("The properties file is missing the accountUrl property.");
+			throw new ConfigurationException("The properties file is missing the accountUrl property.");
 		}
 		
 		service = AzureService.create(accountName, accountKey, accountUrl);
 	}
 	
 	public void run() {
-		HashMap<String, String> map = getDeploymentMap();
+		Map<String, String> map = getDeploymentMap();
 		fetchAndStoreLogs(map);
 	}
 
-	private HashMap<String, String> getDeploymentMap() {
-		HashMap<String, String> deploymentMap = new HashMap<String, String>();
+	private Map<String, String> getDeploymentMap() {
+		Map<String, String> deploymentMap = new HashMap<String, String>();
 		TableResultPartial deploymentEntries = service.getDeploymentEntries();
 		for (Entity entity : deploymentEntries.getEntryList()) {
 			DeploymentEntry deploymentEntry = DeploymentEntryMapper.mapToLogEntry(entity);
@@ -72,7 +74,7 @@ public class LogFetcher implements Runnable {
 		return deploymentMap;
 	}
 
-	private void fetchAndStoreLogs(HashMap<String, String> deploymentMap) {
+	private void fetchAndStoreLogs(Map<String, String> deploymentMap) {
 		Properties properties = propertyHandler.readProperties();
 		if(LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Fetching logs from " + properties.getProperty(LAST_ROW_KEY));
@@ -132,7 +134,7 @@ public class LogFetcher implements Runnable {
 		}
 	}
 
-	private void storeEvents(TableResultPartial tableResultPartial, HashMap<String,String> deploymentMap) {
+	private void storeEvents(TableResultPartial tableResultPartial, Map<String,String> deploymentMap) {
 		if(LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Storing events into ES...");
 		}

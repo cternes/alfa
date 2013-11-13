@@ -6,6 +6,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Properties;
 
+import de.slackspace.alfa.exception.ConfigurationException;
+
+
 public class PropertyHandler {
 
 	private String propertiesFile;
@@ -25,7 +28,7 @@ public class PropertyHandler {
 			p.store(new FileWriter(propertiesFile), null);
 			havePropertiesChanged = true;
 		} catch (IOException e) {
-			throw new RuntimeException("Could not write properties file ("+propertiesFile+")", e);
+			throw new ConfigurationException("Could not write properties file ("+propertiesFile+")", e);
 		}
 	}
 	
@@ -41,9 +44,9 @@ public class PropertyHandler {
 		try {
 			properties.load(new FileReader(propertiesFile));
 		} catch (FileNotFoundException e) {
-			throw new RuntimeException("The properties file ("+propertiesFile+") was not found. Please provide one.", e);
+			throw new ConfigurationException("The properties file ("+propertiesFile+") was not found. Please provide one.", e);
 		} catch (IOException e) {
-			throw new RuntimeException("The properties file ("+propertiesFile+") was not found. Please provide one.", e);
+			throw new ConfigurationException("The properties file ("+propertiesFile+") was not found. Please provide one.", e);
 		}
 	}
 	

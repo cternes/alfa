@@ -3,6 +3,9 @@ package de.slackspace.alfa.azure;
 import java.util.Calendar;
 import java.util.TimeZone;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.microsoft.windowsazure.services.core.Configuration;
 import com.microsoft.windowsazure.services.core.ServiceException;
 import com.microsoft.windowsazure.services.table.TableConfiguration;
@@ -13,9 +16,11 @@ import com.microsoft.windowsazure.services.table.models.QueryEntitiesOptions;
 import com.microsoft.windowsazure.services.table.models.QueryEntitiesResult;
 
 import de.slackspace.alfa.domain.TableResultPartial;
+import de.slackspace.alfa.exception.ConnectionException;
 
 public class AzureService {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(AzureService.class);
 	private static final String DEPLOYMENTTABLE = "deployments";
 	private static final String WADLOGSTABLE = "WADLogsTable";
 	private static final int MAX_DAYS_BACK = 10;
@@ -50,7 +55,7 @@ public class AzureService {
 			QueryEntitiesResult result = tableContract.queryEntities(WADLOGSTABLE, options);
 			return new TableResultPartial(result.getEntities(), result.getNextPartitionKey(), result.getNextRowKey());
 		} catch (ServiceException e) {
-			throw new RuntimeException("Could not query table " + WADLOGSTABLE + ". Error was: ", e);
+			throw new ConnectionException("Could not query table " + WADLOGSTABLE + ". Error was: ", e);
 		}
 	}
 	
@@ -59,7 +64,7 @@ public class AzureService {
 			QueryEntitiesResult result = tableContract.queryEntities(DEPLOYMENTTABLE);
 			return new TableResultPartial(result.getEntities(), null, null);
 		} catch (ServiceException e) {
-			//silent catch is intended
+			LOGGER.warn("Could not find optional table " + DEPLOYMENTTABLE + ". Ignoring...", e);
 			return new TableResultPartial();
 		}
 	}

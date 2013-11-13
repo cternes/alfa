@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 public class Main {
 
+	private static final String SERVICE_START = "serviceStart";
 	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class.getName());
 	private static Alfa alfa;
 
@@ -15,7 +16,7 @@ public class Main {
 		try {
 			alfa = new Alfa();
 			
-			if(cmd.equals("serviceStart")) {
+			if(SERVICE_START.equals(cmd)) {
 				LOGGER.info("Starting in service mode");
 				alfa.start(true);
 			}
