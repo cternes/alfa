@@ -13,6 +13,7 @@ public class LogEntry {
 	private String dateTime;
 	private Long timestamp;
 	private String severity;
+	private String environment;
 	
 	private transient String elasticIndex;
 	
@@ -127,5 +128,13 @@ public class LogEntry {
 
 	public void setDateTime(String dateTime) {
 		this.dateTime = dateTime;
+	}
+
+	public String getEnvironment() {
+		return environment;
+	}
+
+	public void setEnvironment(String environment) {
+		this.environment = environment;
 	}
 }

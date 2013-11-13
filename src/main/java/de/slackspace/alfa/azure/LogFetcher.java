@@ -1,5 +1,6 @@
 package de.slackspace.alfa.azure;
 
+import java.util.HashMap;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -7,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import com.microsoft.windowsazure.services.table.models.Entity;
 
+import de.slackspace.alfa.domain.DeploymentEntry;
+import de.slackspace.alfa.domain.DeploymentEntryMapper;
 import de.slackspace.alfa.domain.LogEntry;
 import de.slackspace.alfa.domain.LogEntryMapper;
 import de.slackspace.alfa.domain.TableResultPartial;
@@ -54,12 +57,23 @@ public class LogFetcher implements Runnable {
 	}
 	
 	public void run() {
-		fetchAndStoreLogs();
+		HashMap<String, String> map = getDeploymentMap();
+		fetchAndStoreLogs(map);
 	}
 
-	private void fetchAndStoreLogs() {
-		Properties properties = propertyHandler.readProperties();
+	private HashMap<String, String> getDeploymentMap() {
+		HashMap<String, String> deploymentMap = new HashMap<String, String>();
+		TableResultPartial deploymentEntries = service.getDeploymentEntries();
+		for (Entity entity : deploymentEntries.getEntryList()) {
+			DeploymentEntry deploymentEntry = DeploymentEntryMapper.mapToLogEntry(entity);
+			deploymentMap.put(deploymentEntry.getDeploymentId(), deploymentEntry.getName());
+		}
 		
+		return deploymentMap;
+	}
+
+	private void fetchAndStoreLogs(HashMap<String, String> deploymentMap) {
+		Properties properties = propertyHandler.readProperties();
 		if(LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Fetching logs from " + properties.getProperty(LAST_ROW_KEY));
 		}
@@ -72,13 +86,13 @@ public class LogFetcher implements Runnable {
 		}
 		
 		if(tableResultPartial.getEntryList().size() > 0) {
-			storeEvents(tableResultPartial);
+			storeEvents(tableResultPartial, deploymentMap);
 			writeTraceProperties(properties, tableResultPartial);
 		}
 		
 		//if there are more entries in the azure table fetch until reaching the end
 		if(tableResultPartial.getNextPartitionKey() != null) {
-			fetchAndStoreLogs();
+			fetchAndStoreLogs(deploymentMap);
 		}
 		else {
 			return;
@@ -118,13 +132,13 @@ public class LogFetcher implements Runnable {
 		}
 	}
 
-	private void storeEvents(TableResultPartial tableResultPartial) {
+	private void storeEvents(TableResultPartial tableResultPartial, HashMap<String,String> deploymentMap) {
 		if(LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Storing events into ES...");
 		}
 		
 		for (Entity entity : tableResultPartial.getEntryList()) {
-			LogEntry logEntry = LogEntryMapper.mapToLogEntry(entity);
+			LogEntry logEntry = LogEntryMapper.mapToLogEntry(entity, deploymentMap);
 			
 			try {
 				logForwarder.pushEvent(logEntry);

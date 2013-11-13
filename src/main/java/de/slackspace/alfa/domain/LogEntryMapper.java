@@ -1,5 +1,7 @@
 package de.slackspace.alfa.domain;
 
+import java.util.HashMap;
+
 import com.microsoft.windowsazure.services.table.models.Entity;
 
 import de.slackspace.alfa.date.DateFormatter;
@@ -8,7 +10,7 @@ public class LogEntryMapper {
 	
 	private LogEntryMapper() {}
 
-	public static LogEntry mapToLogEntry(Entity entity) {
+	public static LogEntry mapToLogEntry(Entity entity, HashMap<String,String> deploymentMap) {
 		LogEntry entry = new LogEntry();
 		entry.setLevel(entity.getProperty("Level").getValue().toString());
 		entry.setMessage(entity.getProperty("Message").getValue().toString());
@@ -21,6 +23,9 @@ public class LogEntryMapper {
 		entry.setTimestamp(entity.getTimestamp().getTime());
 		entry.setDateTime(DateFormatter.toYYYYMMDDHHMMSS(entity.getTimestamp()));
 		entry.setElasticIndex(DateFormatter.toYYYYMMDD(entity.getTimestamp()));
+		
+		String name = deploymentMap.get(entry.getDeploymentId());
+		entry.setEnvironment(name);
 		
 		return entry;
 	}

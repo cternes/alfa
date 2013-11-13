@@ -15,16 +15,28 @@ import de.slackspace.alfa.properties.PropertyHandler;
 public class Alfa {
 
 	private static final String ELASTICSEARCH_CONFIG = "elasticsearch-server.properties";
+	private ElasticSearchServer elasticSearchServer;
 	private LogFetcher logFetcher;
 	
-	public Alfa() throws ConnectionException, IOException {
+	public void start(boolean runAsService) throws IOException, ConnectionException {
 		startElasticSearchServer();
-		initializeLogFetcher();
+		initializeLogFetcher(runAsService);
 		fetchAndStoreLogs();
 	}
 	
-	private void initializeLogFetcher() throws ConnectionException {
-		 this.logFetcher = new LogFetcher(new PropertyHandler());
+	public void stop() {
+		if(elasticSearchServer != null) {
+			elasticSearchServer.stop();
+		}
+	}
+
+	private void initializeLogFetcher(boolean runAsService) throws ConnectionException {
+		String configFile = "conf/alfa.properties";
+		if(runAsService) {
+			configFile = "../../" + configFile;
+		}
+		
+		this.logFetcher = new LogFetcher(new PropertyHandler(configFile));
 	}
 
 	private void startElasticSearchServer() throws IOException {
@@ -32,7 +44,8 @@ public class Alfa {
 		Properties config = new Properties();
 		config.load(inputStream);
 		
-		new ElasticSearchServer(config).start();
+		elasticSearchServer = new ElasticSearchServer(config);
+		elasticSearchServer.start();
 	}
 	
 	private void fetchAndStoreLogs() {
@@ -42,5 +55,5 @@ public class Alfa {
 		//the next start will be blocked until the first one has finished 
 		scheduledExecutorService.scheduleAtFixedRate(logFetcher, 0, 2, TimeUnit.MINUTES);
 	}
-	
+
 }

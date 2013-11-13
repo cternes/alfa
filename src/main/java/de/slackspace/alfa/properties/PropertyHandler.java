@@ -8,14 +8,15 @@ import java.util.Properties;
 
 public class PropertyHandler {
 
-	private String propertiesFile = "alfa.properties";
+	private String propertiesFile;
 	private Properties properties = new Properties();
 	private boolean havePropertiesChanged = true;
 	
-	public PropertyHandler() {
-	}
-	
 	public PropertyHandler(String propertiesFile) {
+		if(propertiesFile == null || propertiesFile.isEmpty()) {
+			throw new IllegalArgumentException("Parameter propertiesFile must not be null or empty");
+		}
+		
 		this.propertiesFile = propertiesFile;
 	}
 	

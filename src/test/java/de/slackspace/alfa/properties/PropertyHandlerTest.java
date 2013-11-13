@@ -16,8 +16,8 @@ import de.slackspace.alfa.properties.PropertyHandler;
 
 public class PropertyHandlerTest {
 
-	private PropertyHandler cut = new PropertyHandler();
-	
+	private PropertyHandler cut;
+	 
 	@Test
 	public void testWriteProperties() throws FileNotFoundException, IOException {
 		String filename = "target/test-classes/testWrite.properties";

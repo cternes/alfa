@@ -16,6 +16,7 @@ import de.slackspace.alfa.domain.TableResultPartial;
 
 public class AzureService {
 
+	private static final String DEPLOYMENTTABLE = "deployments";
 	private static final String WADLOGSTABLE = "WADLogsTable";
 	private static final int MAX_DAYS_BACK = 10;
 	private static AzureService INSTANCE;
@@ -49,7 +50,17 @@ public class AzureService {
 			QueryEntitiesResult result = tableContract.queryEntities(WADLOGSTABLE, options);
 			return new TableResultPartial(result.getEntities(), result.getNextPartitionKey(), result.getNextRowKey());
 		} catch (ServiceException e) {
-			throw new RuntimeException(e);
+			throw new RuntimeException("Could not query table " + WADLOGSTABLE + ". Error was: ", e);
+		}
+	}
+	
+	public TableResultPartial getDeploymentEntries() {
+		try {
+			QueryEntitiesResult result = tableContract.queryEntities(DEPLOYMENTTABLE);
+			return new TableResultPartial(result.getEntities(), null, null);
+		} catch (ServiceException e) {
+			//silent catch is intended
+			return new TableResultPartial();
 		}
 	}
 	
