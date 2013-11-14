@@ -1,5 +1,6 @@
 package de.slackspace.alfa.azure;
 
+import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -14,6 +15,7 @@ import com.microsoft.windowsazure.services.table.TableService;
 import com.microsoft.windowsazure.services.table.models.Filter;
 import com.microsoft.windowsazure.services.table.models.QueryEntitiesOptions;
 import com.microsoft.windowsazure.services.table.models.QueryEntitiesResult;
+import com.sun.jersey.api.client.ClientHandlerException;
 
 import de.slackspace.alfa.domain.TableResultPartial;
 import de.slackspace.alfa.exception.ConnectionException;
@@ -54,7 +56,7 @@ public class AzureService {
 			QueryEntitiesOptions options = constructFilter(nextPartitionKey, nextRowKey);
 			QueryEntitiesResult result = tableContract.queryEntities(WADLOGSTABLE, options);
 			return new TableResultPartial(result.getEntities(), result.getNextPartitionKey(), result.getNextRowKey());
-		} catch (ServiceException e) {
+		} catch (ServiceException | ClientHandlerException e) {
 			throw new ConnectionException("Could not query table " + WADLOGSTABLE + ". Error was: ", e);
 		}
 	}
