@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 import de.slackspace.alfa.azure.LogFetcher;
 import de.slackspace.alfa.elasticsearch.ElasticSearchServer;
 import de.slackspace.alfa.exception.ConnectionException;
-import de.slackspace.alfa.properties.PropertyHandler;
 
 public class Alfa {
 
@@ -36,7 +35,7 @@ public class Alfa {
 			configFile = "../../" + configFile;
 		}
 		
-		this.logFetcher = new LogFetcher(new PropertyHandler(configFile));
+		this.logFetcher = ObjectFactory.constructLogFetcher(configFile);
 	}
 
 	private void startElasticSearchServer() throws IOException {

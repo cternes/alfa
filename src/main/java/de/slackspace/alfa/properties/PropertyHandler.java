@@ -1,6 +1,5 @@
 package de.slackspace.alfa.properties;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -43,8 +42,6 @@ public class PropertyHandler {
 	private void readPropertiesFromDisk() {
 		try {
 			properties.load(new FileReader(propertiesFile));
-		} catch (FileNotFoundException e) {
-			throw new ConfigurationException("The properties file ("+propertiesFile+") was not found. Please provide one.", e);
 		} catch (IOException e) {
 			throw new ConfigurationException("The properties file ("+propertiesFile+") was not found. Please provide one.", e);
 		}

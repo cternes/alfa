@@ -15,7 +15,6 @@ import de.slackspace.alfa.domain.LogEntry;
 import de.slackspace.alfa.domain.LogEntryMapper;
 import de.slackspace.alfa.domain.TableResultPartial;
 import de.slackspace.alfa.elasticsearch.LogForwarder;
-import de.slackspace.alfa.exception.ConfigurationException;
 import de.slackspace.alfa.exception.ConnectionException;
 import de.slackspace.alfa.properties.PropertyHandler;
 
@@ -28,34 +27,20 @@ public class LogFetcher implements Runnable {
 	private AzureService service;
 	private LogForwarder logForwarder;
 	
-	public LogFetcher(PropertyHandler propertyHandler) throws ConnectionException {
+	public LogFetcher(PropertyHandler propertyHandler, LogForwarder logForwarder, AzureService azureService) {
 		if(propertyHandler == null) {
 			throw new IllegalArgumentException("Argument propertyHandler must not be null");
 		}
+		if(logForwarder == null) {
+			throw new IllegalArgumentException("Argument logForwarder must not be null");
+		}
+		if(azureService == null) {
+			throw new IllegalArgumentException("Argument azureService must not be null");
+		}
 		
 		this.propertyHandler = propertyHandler;
-		this.logForwarder = new LogForwarder();
-		
-		initializeAzureService(propertyHandler);
-	}
-
-	private void initializeAzureService(PropertyHandler propertyHandler) {
-		Properties properties = propertyHandler.readProperties();
-		String accountName = properties.getProperty("accountName");
-		String accountKey = properties.getProperty("accountKey");
-		String accountUrl = properties.getProperty("accountUrl");
-		
-		if(accountName == null || accountName.isEmpty()) {
-			throw new ConfigurationException("The properties file is missing the accountName property.");
-		}
-		if(accountKey == null || accountKey.isEmpty()) {
-			throw new ConfigurationException("The properties file is missing the accountKey property.");
-		}
-		if(accountUrl == null || accountUrl.isEmpty()) {
-			throw new ConfigurationException("The properties file is missing the accountUrl property.");
-		}
-		
-		service = AzureService.create(accountName, accountKey, accountUrl);
+		this.logForwarder = logForwarder;
+		this.service = azureService;
 	}
 	
 	public void run() {
