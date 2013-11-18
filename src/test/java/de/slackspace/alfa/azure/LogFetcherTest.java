@@ -3,15 +3,11 @@ package de.slackspace.alfa.azure;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Date;
 import java.util.Properties;
 
-import org.elasticsearch.common.UUID;
+import org.elasticsearch.client.Client;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import com.microsoft.windowsazure.services.table.models.Entity;
-import com.microsoft.windowsazure.services.table.models.Property;
 
 import de.slackspace.alfa.domain.TableResultPartial;
 import de.slackspace.alfa.elasticsearch.LogForwarder;
@@ -36,7 +32,8 @@ public class LogFetcherTest extends TestbaseAzure {
 	@Test(expected=IllegalArgumentException.class)
 	public void testEmptyPropertyHandler() {
 		AzureService azureService = mockAzureService();
-		new LogFetcher(null, new LogForwarder(), azureService);
+		Client client = mock(Client.class);
+		new LogFetcher(null, new LogForwarder(client), azureService);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
@@ -47,7 +44,8 @@ public class LogFetcherTest extends TestbaseAzure {
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testEmptyAzureService() {
-		new LogFetcher(new PropertyHandler(""), new LogForwarder(), null);
+		Client client = mock(Client.class);
+		new LogFetcher(new PropertyHandler(""), new LogForwarder(client), null);
 	}
 	
 	private TableResultPartial createLogEntryTable() {

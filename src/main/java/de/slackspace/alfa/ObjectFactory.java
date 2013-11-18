@@ -2,6 +2,8 @@ package de.slackspace.alfa;
 
 import java.util.Properties;
 
+import org.elasticsearch.client.Client;
+
 import com.microsoft.windowsazure.services.core.Configuration;
 import com.microsoft.windowsazure.services.table.TableConfiguration;
 import com.microsoft.windowsazure.services.table.TableContract;
@@ -17,9 +19,9 @@ public class ObjectFactory {
 
 	private ObjectFactory() {} 
 	
-	public static LogFetcher constructLogFetcher(String configFile) {
+	public static LogFetcher constructLogFetcher(String configFile, Client client) {
 		PropertyHandler propertyHandler = new PropertyHandler(configFile);
-		LogForwarder logForwarder = new LogForwarder();
+		LogForwarder logForwarder = new LogForwarder(client);
 		AzureService azureService = createAzureService(propertyHandler);
 		
 		return new LogFetcher(propertyHandler, logForwarder, azureService);

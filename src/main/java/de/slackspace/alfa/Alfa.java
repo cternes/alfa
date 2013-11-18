@@ -35,7 +35,7 @@ public class Alfa {
 			configFile = "../../" + configFile;
 		}
 		
-		this.logFetcher = ObjectFactory.constructLogFetcher(configFile);
+		this.logFetcher = ObjectFactory.constructLogFetcher(configFile, elasticSearchServer.getClient());
 	}
 
 	private void startElasticSearchServer() throws IOException {
