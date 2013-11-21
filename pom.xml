@@ -80,6 +80,8 @@
 							<addClasspath>true</addClasspath>
 							<mainClass>de.slackspace.alfa.Main</mainClass>
 							<classpathPrefix>${dependency.output.directory}</classpathPrefix>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 						</manifest>
 					</archive>
 				</configuration>

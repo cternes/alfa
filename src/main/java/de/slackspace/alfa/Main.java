@@ -14,6 +14,8 @@ public class Main {
 		String cmd = parseArguments(args);
 		
 		try {
+			LOGGER.info("====Version "+Main.class.getPackage().getImplementationVersion()+"====");
+			
 			alfa = new Alfa();
 			
 			if(SERVICE_START.equals(cmd)) {
