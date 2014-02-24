@@ -3,8 +3,7 @@ package de.slackspace.alfa.azure;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import org.elasticsearch.common.UUID;
+import java.util.UUID;
 
 import com.microsoft.windowsazure.services.table.models.Entity;
 import com.microsoft.windowsazure.services.table.models.Property;

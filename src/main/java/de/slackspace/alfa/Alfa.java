@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import de.slackspace.alfa.azure.LogFetcher;
 import de.slackspace.alfa.elasticsearch.ElasticSearchServer;
+import de.slackspace.alfa.elasticsearch.LogCleaner;
 import de.slackspace.alfa.exception.ConnectionException;
 
 public class Alfa {
@@ -16,10 +17,12 @@ public class Alfa {
 	private static final String ELASTICSEARCH_CONFIG = "elasticsearch-server.properties";
 	private ElasticSearchServer elasticSearchServer;
 	private LogFetcher logFetcher;
+	private LogCleaner logCleaner;
 	
 	public void start(boolean runAsService) throws IOException, ConnectionException {
 		startElasticSearchServer();
 		initializeLogFetcher(runAsService);
+		initializeLogCleaner();
 		fetchAndStoreLogs();
 	}
 	
@@ -37,6 +40,10 @@ public class Alfa {
 		
 		this.logFetcher = ObjectFactory.constructLogFetcher(configFile, elasticSearchServer.getClient());
 	}
+	
+	private void initializeLogCleaner() {
+		this.logCleaner = new LogCleaner(elasticSearchServer.getClient());
+	}
 
 	private void startElasticSearchServer() throws IOException {
 		InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(ELASTICSEARCH_CONFIG);
@@ -53,6 +60,9 @@ public class Alfa {
 		//this will execute the logfetcher every 2 minutes, if a logfetcher run exceeds 2 minutes, 
 		//the next start will be blocked until the first one has finished 
 		scheduledExecutorService.scheduleAtFixedRate(logFetcher, 0, 2, TimeUnit.MINUTES);
+		
+		//this will execute the logCleaner every 24 hours
+		scheduledExecutorService.scheduleAtFixedRate(logCleaner, 0, 24, TimeUnit.HOURS);
 	}
 
 }
