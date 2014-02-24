@@ -77,6 +77,8 @@ public class LogFetcher implements Runnable {
 			writeTraceProperties(properties, tableResultPartial);
 		}
 		
+		tableResultPartial.getEntryList().clear();
+		
 		//if there are more entries in the azure table fetch until reaching the end
 		if(tableResultPartial.getNextPartitionKey() != null) {
 			fetchAndStoreLogs(deploymentMap);
