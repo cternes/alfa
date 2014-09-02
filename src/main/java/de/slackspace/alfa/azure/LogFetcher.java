@@ -1,5 +1,6 @@
 package de.slackspace.alfa.azure;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -133,6 +134,8 @@ public class LogFetcher implements Runnable {
 				logForwarder.pushEvent(logEntry);
 			} catch (ConnectionException e) {
 				LOGGER.error("Could not write event to ES. Error was: ", e);
+			} catch (IOException e) {
+				LOGGER.error("Could not write create ES mapping. Error was: ", e);
 			}
 		}
 	}
