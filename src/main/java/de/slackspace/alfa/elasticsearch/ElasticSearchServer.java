@@ -63,10 +63,10 @@ public class ElasticSearchServer {
         if (ClusterHealthStatus.RED.equals(status)) {
             LOGGER.info("ES status is " + status + ". Waiting for ES recovery.");
  
-            // Waits at most 90 seconds to make sure the cluster health is at least yellow.
+            // Waits at most 10 minutes to make sure the cluster health is at least yellow.
             getClient().admin().cluster().prepareHealth()
                     .setWaitForYellowStatus()
-                    .setTimeout("90s")
+                    .setTimeout("600s")
                     .execute().actionGet();
         }
  
