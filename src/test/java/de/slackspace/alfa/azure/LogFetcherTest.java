@@ -3,8 +3,6 @@ package de.slackspace.alfa.azure;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Properties;
-
 import org.elasticsearch.client.Client;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -12,18 +10,18 @@ import org.mockito.Mockito;
 import de.slackspace.alfa.domain.TableResultPartial;
 import de.slackspace.alfa.elasticsearch.LogForwarder;
 import de.slackspace.alfa.properties.PropertyHandler;
+import de.slackspace.alfa.properties.PropertyHandlerFactory;
 
 public class LogFetcherTest extends TestbaseAzure {
 
 	@Test
 	public void testSimple() {
 		PropertyHandler propertyHandler = mock(PropertyHandler.class);
-		when(propertyHandler.readProperties()).thenReturn(new Properties());
 		
 		LogForwarder logForwarder = mock(LogForwarder.class);
 		AzureService azureService = mockAzureService();
 		
-		new LogFetcher(propertyHandler, logForwarder, azureService).run();
+		new LogFetcher(propertyHandler, logForwarder, azureService, 1).run();
 		
 		Mockito.verify(azureService).getDeploymentEntries();
 		Mockito.verify(azureService).getLogEntries(null, null);
@@ -33,19 +31,19 @@ public class LogFetcherTest extends TestbaseAzure {
 	public void testEmptyPropertyHandler() {
 		AzureService azureService = mockAzureService();
 		Client client = mock(Client.class);
-		new LogFetcher(null, new LogForwarder(client), azureService);
+		new LogFetcher(null, new LogForwarder(client), azureService, 0);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testEmptyLogForwarder() {
 		AzureService azureService = mockAzureService();
-		new LogFetcher(new PropertyHandler(""), null, azureService);
+		new LogFetcher(PropertyHandlerFactory.createPropertyHandler(""), null, azureService, 0);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testEmptyAzureService() {
 		Client client = mock(Client.class);
-		new LogFetcher(new PropertyHandler(""), new LogForwarder(client), null);
+		new LogFetcher(PropertyHandlerFactory.createPropertyHandler(""), new LogForwarder(client), null, 0);
 	}
 	
 	private TableResultPartial createLogEntryTable() {

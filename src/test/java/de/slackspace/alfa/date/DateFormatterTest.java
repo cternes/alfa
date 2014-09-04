@@ -1,9 +1,9 @@
 package de.slackspace.alfa.date;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Calendar;
 import java.util.Date;
-
-import static org.junit.Assert.*;
 
 import org.junit.Test;
 
@@ -25,7 +25,7 @@ public class DateFormatterTest {
 	public void testYearMonthDayMinuteSecond() {
 		Date date = createDate(2013, 10, 11, 15, 0, 0);
 		
-		assertEquals("2013-11-11 15:00:00", DateFormatter.toYYYYMMDDHHMMSS(date));
+		assertEquals("2013-11-11T15:00:00", DateFormatter.toYYYYMMDDHHMMSS(date));
 	}
 	
 	@Test

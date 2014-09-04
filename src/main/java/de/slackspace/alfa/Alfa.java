@@ -2,6 +2,7 @@ package de.slackspace.alfa;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -16,7 +17,7 @@ public class Alfa {
 
 	private static final String ELASTICSEARCH_CONFIG = "elasticsearch-server.properties";
 	private ElasticSearchServer elasticSearchServer;
-	private LogFetcher logFetcher;
+	private List<LogFetcher> logFetchers;
 	private LogCleaner logCleaner;
 	
 	public void start(boolean runAsService) throws IOException, ConnectionException {
@@ -38,7 +39,7 @@ public class Alfa {
 			configFile = "../../" + configFile;
 		}
 		
-		this.logFetcher = ObjectFactory.constructLogFetcher(configFile, elasticSearchServer.getClient());
+		this.logFetchers = ObjectFactory.constructLogFetcher(configFile, elasticSearchServer.getClient());
 	}
 	
 	private void initializeLogCleaner() {
@@ -55,11 +56,13 @@ public class Alfa {
 	}
 	
 	private void fetchAndStoreLogs() {
-		ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+		ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(logFetchers.size());
 		
-		//this will execute the logfetcher every 2 minutes, if a logfetcher run exceeds 2 minutes, 
+		//this will execute the logFetcher every 2 minutes, if a logFetcher run exceeds 2 minutes, 
 		//the next start will be blocked until the first one has finished 
-		scheduledExecutorService.scheduleAtFixedRate(logFetcher, 0, 2, TimeUnit.MINUTES);
+		for (LogFetcher logFetcher : logFetchers) {
+			scheduledExecutorService.scheduleAtFixedRate(logFetcher, 0, 2, TimeUnit.MINUTES);
+		}
 		
 		//this will execute the logCleaner every 24 hours
 		scheduledExecutorService.scheduleAtFixedRate(logCleaner, 0, 24, TimeUnit.HOURS);

@@ -1,6 +1,5 @@
 package de.slackspace.alfa.elasticsearch;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
@@ -15,6 +14,7 @@ import org.elasticsearch.common.hppc.cursors.ObjectCursor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.slackspace.alfa.date.DateFormatter;
 import de.slackspace.alfa.exception.ConnectionException;
 
 public class LogCleaner implements Runnable {
@@ -22,7 +22,6 @@ public class LogCleaner implements Runnable {
 	private static final Logger LOGGER = LoggerFactory.getLogger(LogCleaner.class);
 	private Client client;
 	private int KEEP_DAYS = 30;
-	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy.MM.dd");
 	
 	public LogCleaner(Client client) {
 		this.client = client;
@@ -71,7 +70,7 @@ public class LogCleaner implements Runnable {
 			Calendar cal = Calendar.getInstance();
 			cal.add(Calendar.DATE, i * -1);
 			
-			indicesToKeep.add("logs-" + simpleDateFormat.format(cal.getTime()));
+			indicesToKeep.add("logs-" + DateFormatter.toYYYYMMDD(cal.getTime()));
 		}
 		
 		return indicesToKeep;

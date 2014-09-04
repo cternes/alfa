@@ -3,7 +3,6 @@ package de.slackspace.alfa.azure;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +26,9 @@ public class LogFetcher implements Runnable {
 	private PropertyHandler propertyHandler;
 	private AzureService service;
 	private LogForwarder logForwarder;
+	private int instance;
 	
-	public LogFetcher(PropertyHandler propertyHandler, LogForwarder logForwarder, AzureService azureService) {
+	public LogFetcher(PropertyHandler propertyHandler, LogForwarder logForwarder, AzureService azureService, int instance) {
 		if(propertyHandler == null) {
 			throw new IllegalArgumentException("Argument propertyHandler must not be null");
 		}
@@ -42,6 +42,7 @@ public class LogFetcher implements Runnable {
 		this.propertyHandler = propertyHandler;
 		this.logForwarder = logForwarder;
 		this.service = azureService;
+		this.instance = instance;
 	}
 	
 	public void run() {
@@ -61,13 +62,12 @@ public class LogFetcher implements Runnable {
 	}
 
 	private void fetchAndStoreLogs(Map<String, String> deploymentMap) {
-		Properties properties = propertyHandler.readProperties();
 		if(LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Fetching logs from " + properties.getProperty(LAST_ROW_KEY));
+			LOGGER.debug("Fetching logs from " + propertyHandler.getProperty(LAST_ROW_KEY, instance));
 		}
 		
-		TableResultPartial tableResultPartial = service.getLogEntries(properties.getProperty(LAST_PARTITION_KEY), properties.getProperty(LAST_ROW_KEY));
-		removeDuplicateEvents(tableResultPartial, properties);
+		TableResultPartial tableResultPartial = service.getLogEntries(propertyHandler.getProperty(LAST_PARTITION_KEY, instance), propertyHandler.getProperty(LAST_ROW_KEY, instance));
+		removeDuplicateEvents(tableResultPartial);
 		
 		if(LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Found " + tableResultPartial.getEntryList().size() + " events.");
@@ -75,7 +75,7 @@ public class LogFetcher implements Runnable {
 		
 		if(tableResultPartial.getEntryList().size() > 0) {
 			storeEvents(tableResultPartial, deploymentMap);
-			writeTraceProperties(properties, tableResultPartial);
+			writeTraceProperties(tableResultPartial);
 		}
 		
 		tableResultPartial.getEntryList().clear();
@@ -89,36 +89,36 @@ public class LogFetcher implements Runnable {
 		}
 	}
 
-	private void removeDuplicateEvents(TableResultPartial tableResultPartial, Properties properties) {
+	private void removeDuplicateEvents(TableResultPartial tableResultPartial) {
 		if(tableResultPartial.getEntryList().size() > 0) {
 			Entity firstEvent = tableResultPartial.getEntryList().get(0);
 			
-			if(firstEvent.getPartitionKey().equals(properties.getProperty(LAST_PARTITION_KEY))
-					&& firstEvent.getRowKey().equals(properties.getProperty(LAST_ROW_KEY))) {
+			if(firstEvent.getPartitionKey().equals(propertyHandler.getProperty(LAST_PARTITION_KEY, instance))
+					&& firstEvent.getRowKey().equals(propertyHandler.getProperty(LAST_ROW_KEY, instance))) {
 				tableResultPartial.getEntryList().remove(firstEvent);
 			}
 		}
 	}
 
-	private void writeTraceProperties(Properties properties, TableResultPartial tableResultPartial) {
+	private void writeTraceProperties(TableResultPartial tableResultPartial) {
 		//if we have reached the end of the azure table, remember the last fetched event
 		if(tableResultPartial.getNextPartitionKey() == null) {
 			Entity lastEvent = tableResultPartial.getEntryList().get(tableResultPartial.getEntryList().size() - 1);
 			
-			properties.setProperty(LAST_PARTITION_KEY, lastEvent.getPartitionKey());
-			properties.setProperty(LAST_ROW_KEY, lastEvent.getRowKey());
+			propertyHandler.setProperty(LAST_PARTITION_KEY, lastEvent.getPartitionKey(), instance);
+			propertyHandler.setProperty(LAST_ROW_KEY, lastEvent.getRowKey(), instance);
 		}
 		//if not at the end of the azure table, remember the partition key of the next event
 		else {
-			properties.setProperty(LAST_PARTITION_KEY, tableResultPartial.getNextPartitionKey());
-			properties.setProperty(LAST_ROW_KEY, tableResultPartial.getNextRowKey());
+			propertyHandler.setProperty(LAST_PARTITION_KEY, tableResultPartial.getNextPartitionKey(), instance);
+			propertyHandler.setProperty(LAST_ROW_KEY, tableResultPartial.getNextRowKey(), instance);
 		}
 		
-		propertyHandler.writeProperties(properties);
+		propertyHandler.writeProperties();
 		
 		if(LOGGER.isInfoEnabled()) {
-			LOGGER.info("Fetched until partition: " + properties.getProperty(LAST_PARTITION_KEY));
-			LOGGER.info("Fetched until row: " + properties.getProperty(LAST_ROW_KEY));
+			LOGGER.info("Fetched until partition: " + propertyHandler.getProperty(LAST_PARTITION_KEY, instance));
+			LOGGER.info("Fetched until row: " + propertyHandler.getProperty(LAST_ROW_KEY, instance));
 		}
 	}
 
