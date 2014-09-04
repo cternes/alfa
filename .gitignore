@@ -2,9 +2,7 @@ target
 .settings
 .classpath
 .project
-alfa.properties
 release.properties
-conf
 logs
 data
 pom.xml.releaseBackup
