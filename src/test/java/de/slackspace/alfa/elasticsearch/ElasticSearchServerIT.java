@@ -8,7 +8,7 @@ import java.util.Properties;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.junit.Test;
 
-public class ElasticSearchServerTest {
+public class ElasticSearchServerIT {
 
 	@Test
 	public void testServerStart() {
