@@ -31,6 +31,10 @@ public class ObjectFactory {
 		
 		List<LogFetcher> list = new ArrayList<>();
 		
+		if(LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Starting alfa with these accounts:");
+		}
+		
 		for (int i = 1; i < propertyHandler.getNumberOfAccounts() + 1; i++) {
 			AzureService azureService = createAzureService(propertyHandler, i);
 			list.add(new LogFetcher(propertyHandler, logForwarder, azureService, i));
@@ -47,6 +51,7 @@ public class ObjectFactory {
 		String accountName = propertyHandler.getProperty(PropertyHandler.ACCOUNT_NAME, currentInstance);
 		String accountKey = propertyHandler.getProperty(PropertyHandler.ACCOUNT_KEY, currentInstance);
 		String accountUrl = propertyHandler.getProperty(PropertyHandler.ACCOUNT_URL, currentInstance);
+		String maxLogDays = propertyHandler.getProperty(PropertyHandler.MAX_LOG_DAYS, currentInstance);
 
 		if(accountName == null || accountName.isEmpty()) {
 			throw new ConfigurationException(String.format("The properties file is missing the %s_%s property.", PropertyHandler.ACCOUNT_NAME, currentInstance));
@@ -58,8 +63,20 @@ public class ObjectFactory {
 			throw new ConfigurationException(String.format("The properties file is missing the %s_%s property.", PropertyHandler.ACCOUNT_URL, currentInstance));
 		}
 		
+		int maxLogDaysAsInteger = 10;
+		
+		if(maxLogDays != null && !maxLogDays.isEmpty()) {
+			try {
+				maxLogDaysAsInteger = Integer.parseInt(maxLogDays);
+			}
+			catch(NumberFormatException e) {
+				throw new ConfigurationException(String.format("The property %s_%s is provided but not as integer. Please provide an integer value.", PropertyHandler.MAX_LOG_DAYS, currentInstance));	
+			}
+		}
+		
 		if(LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Azure account '%s' added to monitored accounts", accountName));
+			LOGGER.debug(String.format("    %s. Accountname: %s", currentInstance, accountName));
+			LOGGER.debug(String.format("       MaxLogDays: %s", maxLogDaysAsInteger));
 		}
 
 		Configuration config = Configuration.getInstance();
@@ -68,6 +85,6 @@ public class ObjectFactory {
 		config.setProperty(TableConfiguration.URI, accountUrl);
 		TableContract contract = TableService.create(config);
 
-		return new AzureService(contract);
+		return new AzureService(contract, maxLogDaysAsInteger);
 	}
 }
