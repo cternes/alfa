@@ -13,12 +13,13 @@ public class PropertyHandler {
 	public static final String ACCOUNT_NAME = "accountName";
 	public static final String ACCOUNT_KEY = "accountKey";
 	public static final String ACCOUNT_URL = "accountUrl";
+	public static final String MAX_LOG_DAYS = "maxLogDays";
 	
 	private String propertiesFile;
 	private Properties properties = new Properties();
 	private boolean havePropertiesChanged = true;
 	
-	PropertyHandler(String propertiesFile) {
+	public PropertyHandler(String propertiesFile) {
 		if(propertiesFile == null || propertiesFile.isEmpty()) {
 			throw new IllegalArgumentException("Parameter propertiesFile must not be null or empty");
 		}

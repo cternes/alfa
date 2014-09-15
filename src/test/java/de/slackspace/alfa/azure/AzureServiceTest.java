@@ -25,7 +25,7 @@ public class AzureServiceTest extends TestbaseAzure {
 		result.setEntities(getDeploymentEntities());
 		when(contract.queryEntities("deployments")).thenReturn(result);
 		
-		AzureService cut = new AzureService(contract);
+		AzureService cut = new AzureService(contract, 10);
 		TableResultPartial deploymentEntries = cut.getDeploymentEntries();
 		
 		assertEquals(getDeploymentEntities().size(), deploymentEntries.getEntryList().size());
@@ -39,7 +39,7 @@ public class AzureServiceTest extends TestbaseAzure {
 		result.setEntities(getDeploymentEntities());
 		when(contract.queryEntities("deployments")).thenThrow(new ServiceException());
 		
-		AzureService cut = new AzureService(contract);
+		AzureService cut = new AzureService(contract, 10);
 		TableResultPartial deploymentEntries = cut.getDeploymentEntries();
 		
 		assertEquals(0, deploymentEntries.getEntryList().size());
@@ -53,7 +53,7 @@ public class AzureServiceTest extends TestbaseAzure {
 		result.setEntities(getLogEntities());
 		when(contract.queryEntities(eq("WADLogsTable"), Mockito.any(QueryEntitiesOptions.class))).thenReturn(result);
 		
-		AzureService cut = new AzureService(contract);
+		AzureService cut = new AzureService(contract, 10);
 		TableResultPartial deploymentEntries = cut.getLogEntries(null, null);
 		
 		assertEquals(getDeploymentEntities().size(), deploymentEntries.getEntryList().size());
@@ -67,7 +67,7 @@ public class AzureServiceTest extends TestbaseAzure {
 		result.setEntities(getLogEntities());
 		when(contract.queryEntities(eq("WADLogsTable"), Mockito.any(QueryEntitiesOptions.class))).thenReturn(result);
 		
-		AzureService cut = new AzureService(contract);
+		AzureService cut = new AzureService(contract, 10);
 		TableResultPartial deploymentEntries = cut.getLogEntries("PartitionKey", "RowKey");
 		
 		assertEquals(getDeploymentEntities().size(), deploymentEntries.getEntryList().size());
@@ -81,7 +81,7 @@ public class AzureServiceTest extends TestbaseAzure {
 		result.setEntities(getLogEntities());
 		when(contract.queryEntities(eq("WADLogsTable"), Mockito.any(QueryEntitiesOptions.class))).thenThrow(new ServiceException());
 		
-		AzureService cut = new AzureService(contract);
+		AzureService cut = new AzureService(contract, 10);
 		TableResultPartial deploymentEntries = cut.getLogEntries(null, null);
 		
 		assertEquals(0, deploymentEntries.getEntryList().size());

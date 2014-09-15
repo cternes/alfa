@@ -19,11 +19,12 @@ public class AzureService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AzureService.class);
 	private static final String DEPLOYMENTTABLE = "deployments";
 	private static final String WADLOGSTABLE = "WADLogsTable";
-	private static final int MAX_DAYS_BACK = 10;
+	private int maxLogDays;
 	private TableContract tableContract;
 	
-	public AzureService(TableContract contract) {
+	public AzureService(TableContract contract, int maxLogDays) {
 		this.tableContract = contract;
+		this.maxLogDays = maxLogDays;
 	}
 	
 	public TableResultPartial getLogEntries(String nextPartitionKey, String nextRowKey) {
@@ -55,7 +56,7 @@ public class AzureService {
 		}
 		else {
 			Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-			cal.add(Calendar.DAY_OF_MONTH, MAX_DAYS_BACK * -1);
+			cal.add(Calendar.DAY_OF_MONTH, maxLogDays * -1);
 			String partitionKey = PartitionCalculator.calculatePartitionKeyFor(cal);
 			options.setFilter(Filter.queryString("PartitionKey ge '" + partitionKey + "'"));
 		}

@@ -10,7 +10,6 @@ import org.mockito.Mockito;
 import de.slackspace.alfa.domain.TableResultPartial;
 import de.slackspace.alfa.elasticsearch.LogForwarder;
 import de.slackspace.alfa.properties.PropertyHandler;
-import de.slackspace.alfa.properties.PropertyHandlerFactory;
 
 public class LogFetcherTest extends TestbaseAzure {
 
@@ -37,13 +36,13 @@ public class LogFetcherTest extends TestbaseAzure {
 	@Test(expected=IllegalArgumentException.class)
 	public void testEmptyLogForwarder() {
 		AzureService azureService = mockAzureService();
-		new LogFetcher(PropertyHandlerFactory.createPropertyHandler(""), null, azureService, 0);
+		new LogFetcher(new PropertyHandler(""), null, azureService, 0);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testEmptyAzureService() {
 		Client client = mock(Client.class);
-		new LogFetcher(PropertyHandlerFactory.createPropertyHandler(""), new LogForwarder(client), null, 0);
+		new LogFetcher(new PropertyHandler(""), new LogForwarder(client), null, 0);
 	}
 	
 	private TableResultPartial createLogEntryTable() {
