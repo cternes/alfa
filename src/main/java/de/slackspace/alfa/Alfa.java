@@ -1,7 +1,7 @@
 package de.slackspace.alfa;
 
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
@@ -15,13 +15,14 @@ import de.slackspace.alfa.exception.ConnectionException;
 
 public class Alfa {
 
-	private static final String ELASTICSEARCH_CONFIG = "elasticsearch-server.properties";
+	private static final String ALFA_CONFIG = "conf/alfa.properties";
+	private static final String ELASTICSEARCH_CONFIG = "conf/elasticsearch-server.properties";
 	private ElasticSearchServer elasticSearchServer;
 	private List<LogFetcher> logFetchers;
 	private LogCleaner logCleaner;
 	
 	public void start(boolean runAsService) throws IOException, ConnectionException {
-		startElasticSearchServer();
+		startElasticSearchServer(runAsService);
 		initializeLogFetcher(runAsService);
 		initializeLogCleaner();
 		fetchAndStoreLogs();
@@ -34,7 +35,7 @@ public class Alfa {
 	}
 
 	private void initializeLogFetcher(boolean runAsService) throws ConnectionException {
-		String configFile = "conf/alfa.properties";
+		String configFile = ALFA_CONFIG;
 		if(runAsService) {
 			configFile = "../../" + configFile;
 		}
@@ -46,10 +47,14 @@ public class Alfa {
 		this.logCleaner = new LogCleaner(elasticSearchServer.getClient());
 	}
 
-	private void startElasticSearchServer() throws IOException {
-		InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(ELASTICSEARCH_CONFIG);
+	private void startElasticSearchServer(boolean runAsService) throws IOException {
+		String configFile = ELASTICSEARCH_CONFIG;
+		if(runAsService) {
+			configFile = "../../" + configFile;
+		}
+				
 		Properties config = new Properties();
-		config.load(inputStream);
+		config.load(new FileReader(configFile));
 		
 		elasticSearchServer = new ElasticSearchServer(config);
 		elasticSearchServer.start();
