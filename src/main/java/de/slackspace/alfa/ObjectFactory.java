@@ -32,16 +32,21 @@ public class ObjectFactory {
 		List<LogFetcher> list = new ArrayList<>();
 		
 		if(LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Starting alfa with these accounts:");
+			LOGGER.debug("=== Starting alfa with these accounts ===");
 		}
 		
 		for (int i = 1; i < propertyHandler.getNumberOfAccounts() + 1; i++) {
+			int pollingIntervalMinutes = getPollingIntervalMinutes(i, propertyHandler.getProperty(PropertyHandler.POLLING_INTERVAL, i));
 			AzureService azureService = createAzureService(propertyHandler, i);
-			list.add(new LogFetcher(propertyHandler, logForwarder, azureService, i));
+			list.add(new LogFetcher(propertyHandler, logForwarder, azureService, i, pollingIntervalMinutes));
+		}
+		
+		if(LOGGER.isDebugEnabled()) {
+			LOGGER.debug("=========================================");
 		}
 		
 		if(list.size() == 0) {
-			throw new ConfigurationException(String.format("The properties file is missing a configured azure account. Please provide at least one property with name %s_1", PropertyHandler.ACCOUNT_URL));
+			throw new ConfigurationException(String.format("The properties file is missing a configured azure account. Please provide at least one property with name %s_1", PropertyHandler.ACCOUNT_NAME));
 		}
 		
 		return list;
@@ -50,33 +55,25 @@ public class ObjectFactory {
 	private static AzureService createAzureService(PropertyHandler propertyHandler, int currentInstance) {
 		String accountName = propertyHandler.getProperty(PropertyHandler.ACCOUNT_NAME, currentInstance);
 		String accountKey = propertyHandler.getProperty(PropertyHandler.ACCOUNT_KEY, currentInstance);
-		String accountUrl = propertyHandler.getProperty(PropertyHandler.ACCOUNT_URL, currentInstance);
 		String maxLogDays = propertyHandler.getProperty(PropertyHandler.MAX_LOG_DAYS, currentInstance);
+		String pollingInterval = propertyHandler.getProperty(PropertyHandler.POLLING_INTERVAL, currentInstance);
+		String accountUrl = propertyHandler.getAccountUrl(accountName);
 
 		if(accountName == null || accountName.isEmpty()) {
-			throw new ConfigurationException(String.format("The properties file is missing the %s_%s property.", PropertyHandler.ACCOUNT_NAME, currentInstance));
+			throw new ConfigurationException(String.format("The properties file is missing the %s.%s property.", PropertyHandler.ACCOUNT_NAME, currentInstance));
 		}
 		if(accountKey == null || accountKey.isEmpty()) {
-			throw new ConfigurationException(String.format("The properties file is missing the %s_%s property.", PropertyHandler.ACCOUNT_KEY, currentInstance));
-		}
-		if(accountUrl == null || accountUrl.isEmpty()) {
-			throw new ConfigurationException(String.format("The properties file is missing the %s_%s property.", PropertyHandler.ACCOUNT_URL, currentInstance));
+			throw new ConfigurationException(String.format("The properties file is missing the %s.%s property.", PropertyHandler.ACCOUNT_KEY, currentInstance));
 		}
 		
-		int maxLogDaysAsInteger = 10;
-		
-		if(maxLogDays != null && !maxLogDays.isEmpty()) {
-			try {
-				maxLogDaysAsInteger = Integer.parseInt(maxLogDays);
-			}
-			catch(NumberFormatException e) {
-				throw new ConfigurationException(String.format("The property %s_%s is provided but not as integer. Please provide an integer value.", PropertyHandler.MAX_LOG_DAYS, currentInstance));	
-			}
-		}
+		int maxLogDaysAsInteger = getMaxLogDays(currentInstance, maxLogDays);
+		int pollingIntervalMinutesAsInteger = getPollingIntervalMinutes(currentInstance, pollingInterval);
 		
 		if(LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("    %s. Accountname: %s", currentInstance, accountName));
-			LOGGER.debug(String.format("       MaxLogDays: %s", maxLogDaysAsInteger));
+			LOGGER.debug(String.format("        Accounturl: %s", accountUrl));
+			LOGGER.debug(String.format("        MaxLogDays: %s", maxLogDaysAsInteger));
+			LOGGER.debug(String.format("        PollingIntervalMinutes: %s", pollingIntervalMinutesAsInteger));
 		}
 
 		Configuration config = Configuration.getInstance();
@@ -86,5 +83,35 @@ public class ObjectFactory {
 		TableContract contract = TableService.create(config);
 
 		return new AzureService(contract, maxLogDaysAsInteger);
+	}
+
+	private static int getMaxLogDays(int currentInstance, String maxLogDays) {
+		int maxLogDaysAsInteger = 10; //default value is 10
+		
+		if(maxLogDays != null && !maxLogDays.isEmpty()) {
+			try {
+				maxLogDaysAsInteger = Integer.parseInt(maxLogDays);
+			}
+			catch(NumberFormatException e) {
+				throw new ConfigurationException(String.format("The property %s.%s is provided but not as integer. Please provide an integer value.", PropertyHandler.MAX_LOG_DAYS, currentInstance));	
+			}
+		}
+		
+		return maxLogDaysAsInteger;
+	}
+	
+	private static int getPollingIntervalMinutes(int currentInstance, String pollingInterval) {
+		int pollingIntervalAsInteger = 2; //default value is 2
+		
+		if(pollingInterval != null && !pollingInterval.isEmpty()) {
+			try {
+				pollingIntervalAsInteger = Integer.parseInt(pollingInterval);
+			}
+			catch(NumberFormatException e) {
+				throw new ConfigurationException(String.format("The property %s.%s is provided but not as integer. Please provide an integer value.", PropertyHandler.POLLING_INTERVAL, currentInstance));	
+			}
+		}
+		
+		return pollingIntervalAsInteger;
 	}
 }

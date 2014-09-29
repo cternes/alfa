@@ -70,9 +70,9 @@ public class PropertyHandlerTest {
 		String filename = "target/test-classes/testGetProperty.properties";
 		cut = new PropertyHandler(filename);
 		
-		cut.setProperty("key_1", "A");
-		cut.setProperty("key_2", "B");
-		cut.setProperty("key_3", "C");
+		cut.setProperty("key.1", "A");
+		cut.setProperty("key.2", "B");
+		cut.setProperty("key.3", "C");
 		cut.writeProperties();
 		
 		assertEquals("A", cut.getProperty("key", 1));
@@ -101,9 +101,9 @@ public class PropertyHandlerTest {
 		String filename = "target/test-classes/testGetNumberOfAccountsThree.properties";
 		cut = new PropertyHandler(filename);
 		
-		cut.setProperty("accountUrl_1", "value1");
-		cut.setProperty("accountUrl_2", "value2");
-		cut.setProperty("accountUrl_3", "value3");
+		cut.setProperty("accountName.1", "value1");
+		cut.setProperty("accountName.2", "value2");
+		cut.setProperty("accountName.3", "value3");
 		cut.writeProperties();
 		
 		assertEquals(3, cut.getNumberOfAccounts());
@@ -114,7 +114,7 @@ public class PropertyHandlerTest {
 		String filename = "target/test-classes/testGetNumberOfAccountsOne.properties";
 		cut = new PropertyHandler(filename);
 		
-		cut.setProperty("accountUrl_1", "value1");
+		cut.setProperty("accountName.1", "value1");
 		cut.writeProperties();
 		
 		assertEquals(1, cut.getNumberOfAccounts());
@@ -128,6 +128,22 @@ public class PropertyHandlerTest {
 	@Test(expected=IllegalArgumentException.class)
 	public void testConstructorHandleEmpty() {
 		new PropertyHandler("");
+	}
+	
+	@Test
+	public void testCreateAccountUrl() {
+		String filename = "target/test-classes/dummy.properties";
+		cut = new PropertyHandler(filename);
+		
+		assertEquals("https://test.table.core.windows.net", cut.getAccountUrl("test"));
+	}
+	
+	@Test
+	public void testCreateAccountUrlNull() {
+		String filename = "target/test-classes/dummy.properties";
+		cut = new PropertyHandler(filename);
+		
+		assertEquals("https://null.table.core.windows.net", cut.getAccountUrl(null));
 	}
 	
 //	@Test(expected=ConfigurationException.class)

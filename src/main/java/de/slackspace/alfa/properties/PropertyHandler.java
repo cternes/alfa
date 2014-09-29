@@ -10,10 +10,11 @@ import de.slackspace.alfa.exception.ConfigurationException;
 
 public class PropertyHandler {
 
+	public static final String POLLING_INTERVAL = "pollingIntervalMinutes";
 	public static final String ACCOUNT_NAME = "accountName";
 	public static final String ACCOUNT_KEY = "accountKey";
-	public static final String ACCOUNT_URL = "accountUrl";
 	public static final String MAX_LOG_DAYS = "maxLogDays";
+	private static final String AZURE_STORAGE_URL = "https://%s.table.core.windows.net";
 	
 	private String propertiesFile;
 	private Properties properties = new Properties();
@@ -57,12 +58,16 @@ public class PropertyHandler {
 		
 		int i = 1;
 		while(true) {
-			String value = properties.getProperty(String.format("%s_%s", ACCOUNT_URL, i));
+			String value = properties.getProperty(String.format("%s.%s", ACCOUNT_NAME, i));
 			if(value == null) {
 				return i - 1;
 			}
 			i++;
 		}
+	}
+	
+	public String getAccountUrl(String accountName) {
+		return String.format(AZURE_STORAGE_URL, accountName);
 	}
 
 	public String getProperty(String key, int instance) {
@@ -92,6 +97,6 @@ public class PropertyHandler {
 	}
 
 	private String prepareKey(String key, int instance) {
-		return String.format("%s_%s", key, instance);
+		return String.format("%s.%s", key, instance);
 	}
 }

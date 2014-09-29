@@ -27,8 +27,9 @@ public class LogFetcher implements Runnable {
 	private AzureService service;
 	private LogForwarder logForwarder;
 	private int instance;
+	private int pollingIntervalMinutes;
 	
-	public LogFetcher(PropertyHandler propertyHandler, LogForwarder logForwarder, AzureService azureService, int instance) {
+	public LogFetcher(PropertyHandler propertyHandler, LogForwarder logForwarder, AzureService azureService, int instance, int pollingIntervalMinutes) {
 		if(propertyHandler == null) {
 			throw new IllegalArgumentException("Argument propertyHandler must not be null");
 		}
@@ -43,6 +44,7 @@ public class LogFetcher implements Runnable {
 		this.logForwarder = logForwarder;
 		this.service = azureService;
 		this.instance = instance;
+		this.pollingIntervalMinutes = pollingIntervalMinutes;
 	}
 	
 	public void run() {
@@ -139,5 +141,9 @@ public class LogFetcher implements Runnable {
 			}
 		}
 	}
-	
+
+	public int getPollingIntervalMinutes() {
+		return pollingIntervalMinutes;
+	}
+
 }
