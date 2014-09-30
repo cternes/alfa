@@ -12,6 +12,8 @@ import de.slackspace.alfa.azure.LogFetcher;
 import de.slackspace.alfa.elasticsearch.ElasticSearchServer;
 import de.slackspace.alfa.elasticsearch.LogCleaner;
 import de.slackspace.alfa.exception.ConnectionException;
+import de.slackspace.alfa.properties.PropertyHandler;
+import de.slackspace.alfa.properties.PropertyHandlerFactory;
 
 public class Alfa {
 
@@ -23,8 +25,11 @@ public class Alfa {
 	
 	public void start(boolean runAsService) throws IOException, ConnectionException {
 		startElasticSearchServer(runAsService);
-		initializeLogFetcher(runAsService);
-		initializeLogCleaner();
+		
+		String configFile = getAlfaConfig(runAsService);
+		
+		initializeLogFetcher(configFile);
+		initializeLogCleaner(configFile);
 		fetchAndStoreLogs();
 	}
 	
@@ -34,17 +39,21 @@ public class Alfa {
 		}
 	}
 
-	private void initializeLogFetcher(boolean runAsService) throws ConnectionException {
+	private void initializeLogFetcher(String configFile) throws ConnectionException {
+		this.logFetchers = ObjectFactory.constructLogFetcher(configFile, elasticSearchServer.getClient());
+	}
+
+	private void initializeLogCleaner(String configFile) {
+		PropertyHandler propertyHandler = PropertyHandlerFactory.createPropertyHandler(configFile);
+		this.logCleaner = ObjectFactory.constructLogCleaner(propertyHandler, elasticSearchServer.getClient());
+	}
+	
+	private String getAlfaConfig(boolean runAsService) {
 		String configFile = ALFA_CONFIG;
 		if(runAsService) {
 			configFile = "../../" + configFile;
 		}
-		
-		this.logFetchers = ObjectFactory.constructLogFetcher(configFile, elasticSearchServer.getClient());
-	}
-	
-	private void initializeLogCleaner() {
-		this.logCleaner = new LogCleaner(elasticSearchServer.getClient());
+		return configFile;
 	}
 
 	private void startElasticSearchServer(boolean runAsService) throws IOException {

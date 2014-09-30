@@ -21,10 +21,11 @@ public class LogCleaner implements Runnable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(LogCleaner.class);
 	private Client client;
-	private int KEEP_DAYS = 30;
+	private int maxKeepDays;
 	
-	public LogCleaner(Client client) {
+	public LogCleaner(Client client, int maxKeepDays) {
 		this.client = client;
+		this.maxKeepDays = maxKeepDays;
 	}
 	
 	public void deleteOldLogs() throws ConnectionException {
@@ -66,7 +67,7 @@ public class LogCleaner implements Runnable {
 		List<String> indicesToKeep = new ArrayList<String>();
 		indicesToKeep.add("kibana-int"); //do not delete internal kibana index
 		
-		for (int i = 0; i < KEEP_DAYS; i++) {
+		for (int i = 0; i < maxKeepDays; i++) {
 			Calendar cal = Calendar.getInstance();
 			cal.add(Calendar.DATE, i * -1);
 			
@@ -74,5 +75,9 @@ public class LogCleaner implements Runnable {
 		}
 		
 		return indicesToKeep;
+	}
+	
+	public int getMaxKeepDays() {
+		return maxKeepDays;
 	}
 }

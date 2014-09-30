@@ -14,6 +14,7 @@ import com.microsoft.windowsazure.services.table.TableService;
 
 import de.slackspace.alfa.azure.AzureService;
 import de.slackspace.alfa.azure.LogFetcher;
+import de.slackspace.alfa.elasticsearch.LogCleaner;
 import de.slackspace.alfa.elasticsearch.LogForwarder;
 import de.slackspace.alfa.exception.ConfigurationException;
 import de.slackspace.alfa.properties.PropertyHandler;
@@ -83,6 +84,21 @@ public class ObjectFactory {
 		TableContract contract = TableService.create(config);
 
 		return new AzureService(contract, maxLogDaysAsInteger);
+	}
+	
+	public static LogCleaner constructLogCleaner(PropertyHandler propertyHandler, Client client) {
+
+		int maxKeepDays = 10;
+		for (int i = 1; i < propertyHandler.getNumberOfAccounts() + 1; i++) {
+			String maxLogDays = propertyHandler.getProperty(PropertyHandler.MAX_LOG_DAYS, i);
+			int maxLogDaysAsInteger = getMaxLogDays(i, maxLogDays);
+			
+			if(maxLogDaysAsInteger > maxKeepDays) {
+				maxKeepDays = maxLogDaysAsInteger;
+			}
+		}
+		
+		return new LogCleaner(client, maxKeepDays);
 	}
 
 	private static int getMaxLogDays(int currentInstance, String maxLogDays) {
