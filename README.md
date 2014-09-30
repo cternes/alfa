@@ -30,17 +30,33 @@ Unzip the distribution
 
 Edit the config file with your azure storage account credentials (can be found at Windows Azure Management Portal). You can find the config file at `conf/alfa.properties`.
 
-| Name | Description |
-|:-----------|:------------|
-| accountUrl | The url to access the azure storage |
-| accountName | The name of the azure storage |
-| accountKey | The primary access key of the azure storage |
+| Name | Description | Required?
+|:-----------|:------------|:------------|
+| accountName.1 | The name of the azure storage | X 
+| accountKey.1 | The primary access key of the azure storage | X
+| pollingIntervalMinutes.1 | How often the azure storage will be polled in minutes (Default: 2 minutes)  | - 
+| maxLogDays.1 | The number of days in the past from which logs will be polled (Default: 10 days) | - 
+ 
+You can define multiple accounts by increasing the number at the end of a property:
+
+    accountName.1=firstAccount
+	accountName.2=secondAccount
+	accountName.3=thirdAccount
 
 ## 4. Run the application
 
-You can start the application with the following command
+The simplest way to start the application is by executing the following command
 
     java -jar alfa.jar
+
+### Run as service
+
+If you want to run Alfa in the background (recommended) you can start one of the service wrappers for your operating system.
+In the folder */bin/* there are folders for different operating systems.
+
+* Linux: Start the application with a shell	`./bin/alfa.sh`
+* Windows: First install the service with `InstallService.bat`, then start the service *Alfa* from the service manager.
+ 
     
 What's next?
 ===
