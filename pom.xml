@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.slackspace</groupId>
 	<artifactId>alfa</artifactId>
-	<version>0.9-SNAPSHOT</version>
+	<version>0.9</version>
 	<packaging>jar</packaging>
 
 	<properties>
