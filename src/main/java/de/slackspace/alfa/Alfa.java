@@ -6,7 +6,11 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.slackspace.alfa.azure.LogFetcher;
 import de.slackspace.alfa.elasticsearch.ElasticSearchServer;
@@ -17,6 +21,7 @@ import de.slackspace.alfa.properties.PropertyHandlerFactory;
 
 public class Alfa {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(Alfa.class);
 	private static final String ALFA_CONFIG = "conf/alfa.properties";
 	private static final String ELASTICSEARCH_CONFIG = "conf/elasticsearch-server.properties";
 	private ElasticSearchServer elasticSearchServer;
@@ -75,11 +80,25 @@ public class Alfa {
 		//this will execute the logFetcher every n minutes, if a logFetcher run exceeds n minutes, 
 		//the next start will be blocked until the first one has finished 
 		for (LogFetcher logFetcher : logFetchers) {
-			scheduledExecutorService.scheduleAtFixedRate(logFetcher, 0, logFetcher.getPollingIntervalMinutes(), TimeUnit.MINUTES);
+			ScheduledFuture<?> logFetcherHandle = scheduledExecutorService.scheduleAtFixedRate(logFetcher, 0, logFetcher.getPollingIntervalMinutes(), TimeUnit.MINUTES);
+			
+			try {
+				logFetcherHandle.get();
+			}
+			catch(Exception e) {
+				LOGGER.error("Uncaught exception", e);
+			}
 		}
 		
 		//this will execute the logCleaner every 24 hours
-		scheduledExecutorService.scheduleAtFixedRate(logCleaner, 0, 24, TimeUnit.HOURS);
+		ScheduledFuture<?> logCleanerHandle = scheduledExecutorService.scheduleAtFixedRate(logCleaner, 0, 24, TimeUnit.HOURS);
+		
+		try {
+			logCleanerHandle.get();
+		}
+		catch(Exception e) {
+			LOGGER.error("Uncaught exception", e);
+		}
 	}
 
 }

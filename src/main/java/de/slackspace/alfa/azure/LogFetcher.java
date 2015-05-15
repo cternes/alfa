@@ -11,8 +11,10 @@ import com.microsoft.windowsazure.services.table.models.Entity;
 
 import de.slackspace.alfa.domain.DeploymentEntry;
 import de.slackspace.alfa.domain.DeploymentEntryMapper;
-import de.slackspace.alfa.domain.LogEntry;
+import de.slackspace.alfa.domain.ElasticSearchEntry;
+import de.slackspace.alfa.domain.EntryMapper;
 import de.slackspace.alfa.domain.LogEntryMapper;
+import de.slackspace.alfa.domain.PerformanceCounterMapper;
 import de.slackspace.alfa.domain.TableResultPartial;
 import de.slackspace.alfa.elasticsearch.LogForwarder;
 import de.slackspace.alfa.exception.ConnectionException;
@@ -31,6 +33,9 @@ public class LogFetcher implements Runnable {
 	private int instance;
 	private int pollingIntervalMinutes;
 	private boolean fetchPerformanceCounters;
+	
+	private final LogEntryMapper logEntryMapper = new LogEntryMapper();
+	private final PerformanceCounterMapper performanceCounterMapper = new PerformanceCounterMapper();
 	
 	public LogFetcher(PropertyHandler propertyHandler, LogForwarder logForwarder, AzureService azureService,
 			int instance, int pollingIntervalMinutes, boolean fetchPerformanceCounters) {
@@ -56,10 +61,10 @@ public class LogFetcher implements Runnable {
 		Map<String, String> map = getDeploymentMap();
 
 		// fetch logs
-		fetchAndStoreEvents(map, "logs", LAST_ROW_KEY, LAST_PARTITION_KEY, AzureService.WADLOGSTABLE);
+		fetchAndStoreEvents(map, "logs", LAST_ROW_KEY, LAST_PARTITION_KEY, AzureService.WADLOGSTABLE, logEntryMapper);
 		
 		if(fetchPerformanceCounters) {
-			fetchAndStoreEvents(map, "performance counters", LAST_ROW_KEY_PERFORMANCE, LAST_PARTITION_KEY_PERFORMANCE, AzureService.PERFORMANCETABLE);
+			fetchAndStoreEvents(map, "performance counters", LAST_ROW_KEY_PERFORMANCE, LAST_PARTITION_KEY_PERFORMANCE, AzureService.PERFORMANCETABLE, performanceCounterMapper);
 		}
 	}
 
@@ -74,7 +79,8 @@ public class LogFetcher implements Runnable {
 		return deploymentMap;
 	}
 	
-	private void fetchAndStoreEvents(Map<String, String> deploymentMap, String name, String lastRowKeyProperty, String lastPartitionKeyProperty, String storageTable) {
+	private void fetchAndStoreEvents(Map<String, String> deploymentMap, String name, String lastRowKeyProperty,
+			String lastPartitionKeyProperty, String storageTable, EntryMapper entryMapper) {
 		if(LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Fetching " + name + " from " + propertyHandler.getProperty(lastRowKeyProperty, instance));
 		}
@@ -88,7 +94,7 @@ public class LogFetcher implements Runnable {
 		}
 		
 		if(tableResultPartial.getEntryList().size() > 0) {
-			storeEvents(tableResultPartial, deploymentMap);
+			storeEvents(tableResultPartial, deploymentMap, entryMapper);
 			writeTraceProperties(tableResultPartial, lastRowKeyProperty, lastPartitionKeyProperty);
 		}
 		
@@ -96,7 +102,7 @@ public class LogFetcher implements Runnable {
 		
 		//if there are more entries in the azure table fetch until reaching the end
 		if(tableResultPartial.getNextPartitionKey() != null) {
-			fetchAndStoreEvents(deploymentMap, name, lastRowKeyProperty, lastPartitionKeyProperty, storageTable);
+			fetchAndStoreEvents(deploymentMap, name, lastRowKeyProperty, lastPartitionKeyProperty, storageTable, entryMapper);
 		}
 		else {
 			return;
@@ -136,16 +142,16 @@ public class LogFetcher implements Runnable {
 		}
 	}
 
-	private void storeEvents(TableResultPartial tableResultPartial, Map<String,String> deploymentMap) {
+	private void storeEvents(TableResultPartial tableResultPartial, Map<String,String> deploymentMap, EntryMapper mapper) {
 		if(LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Storing events into ES...");
 		}
 		
 		for (Entity entity : tableResultPartial.getEntryList()) {
-			LogEntry logEntry = LogEntryMapper.mapToLogEntry(entity, deploymentMap);
+			ElasticSearchEntry entry = mapper.mapToEntry(entity, deploymentMap);
 			
 			try {
-				logForwarder.pushEvent(logEntry);
+				logForwarder.pushEvent(entry);
 			} catch (ConnectionException e) {
 				LOGGER.error("Could not write event to ES. Error was: ", e);
 			} catch (IOException e) {
