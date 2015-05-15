@@ -38,8 +38,9 @@ public class ObjectFactory {
 		
 		for (int i = 1; i < propertyHandler.getNumberOfAccounts() + 1; i++) {
 			int pollingIntervalMinutes = getPollingIntervalMinutes(i, propertyHandler.getProperty(PropertyHandler.POLLING_INTERVAL, i));
-			AzureService azureService = createAzureService(propertyHandler, i);
-			list.add(new LogFetcher(propertyHandler, logForwarder, azureService, i, pollingIntervalMinutes));
+			boolean fetchPerformanceCounters = getFetchPerformanceCounters(propertyHandler.getProperty(PropertyHandler.FETCH_PERFORMANCE_COUNTERS, i));
+			AzureService azureService = createAzureService(propertyHandler, i, fetchPerformanceCounters);
+			list.add(new LogFetcher(propertyHandler, logForwarder, azureService, i, pollingIntervalMinutes, fetchPerformanceCounters));
 		}
 		
 		if(LOGGER.isDebugEnabled()) {
@@ -53,7 +54,7 @@ public class ObjectFactory {
 		return list;
 	}
 	
-	private static AzureService createAzureService(PropertyHandler propertyHandler, int currentInstance) {
+	private static AzureService createAzureService(PropertyHandler propertyHandler, int currentInstance, boolean fetchPerformanceCounters) {
 		String accountName = propertyHandler.getProperty(PropertyHandler.ACCOUNT_NAME, currentInstance);
 		String accountKey = propertyHandler.getProperty(PropertyHandler.ACCOUNT_KEY, currentInstance);
 		String maxLogDays = propertyHandler.getProperty(PropertyHandler.MAX_LOG_DAYS, currentInstance);
@@ -75,6 +76,7 @@ public class ObjectFactory {
 			LOGGER.debug(String.format("        Accounturl: %s", accountUrl));
 			LOGGER.debug(String.format("        MaxLogDays: %s", maxLogDaysAsInteger));
 			LOGGER.debug(String.format("        PollingIntervalMinutes: %s", pollingIntervalMinutesAsInteger));
+			LOGGER.debug(String.format("        FetchPerformanceCounters: %s", fetchPerformanceCounters));
 		}
 
 		Configuration config = Configuration.getInstance();
@@ -129,5 +131,9 @@ public class ObjectFactory {
 		}
 		
 		return pollingIntervalAsInteger;
+	}
+	
+	private static boolean getFetchPerformanceCounters(String fetchPerformanceCounters) {
+		return Boolean.parseBoolean(fetchPerformanceCounters);
 	}
 }

@@ -38,4 +38,15 @@ public abstract class TestbaseAzure {
 		list.add(logEntry);
 		return list;
 	}
+	
+	public List<Entity> getPerformanceEntities() {
+		List<Entity> list = new ArrayList<Entity>();
+		
+		Entity performanceEntity = new Entity();
+		performanceEntity.setProperty("DeploymentId", new Property().setValue("456"));
+		performanceEntity.setProperty("CounterName", new Property().setValue("\\Memory\\Available MBytes"));
+		
+		list.add(performanceEntity);
+		return list;
+	}
 }

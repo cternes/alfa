@@ -137,4 +137,11 @@ public class LogEntry {
 	public void setEnvironment(String environment) {
 		this.environment = environment;
 	}
+
+	@Override
+	public String toString() {
+		return "LogEntry [partitionKey=" + partitionKey + ", message="
+				+ message + "]";
+	}
+	
 }

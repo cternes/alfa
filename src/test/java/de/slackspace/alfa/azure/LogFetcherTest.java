@@ -20,29 +20,29 @@ public class LogFetcherTest extends TestbaseAzure {
 		LogForwarder logForwarder = mock(LogForwarder.class);
 		AzureService azureService = mockAzureService();
 		
-		new LogFetcher(propertyHandler, logForwarder, azureService, 1, 1).run();
+		new LogFetcher(propertyHandler, logForwarder, azureService, 1, 1, false).run();
 		
 		Mockito.verify(azureService).getDeploymentEntries();
-		Mockito.verify(azureService).getLogEntries(null, null);
+		Mockito.verify(azureService).getEntries(null, null, AzureService.WADLOGSTABLE);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testEmptyPropertyHandler() {
 		AzureService azureService = mockAzureService();
 		Client client = mock(Client.class);
-		new LogFetcher(null, new LogForwarder(client), azureService, 0, 0);
+		new LogFetcher(null, new LogForwarder(client), azureService, 0, 0, false);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testEmptyLogForwarder() {
 		AzureService azureService = mockAzureService();
-		new LogFetcher(new PropertyHandler(""), null, azureService, 0, 0);
+		new LogFetcher(new PropertyHandler(""), null, azureService, 0, 0, false);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testEmptyAzureService() {
 		Client client = mock(Client.class);
-		new LogFetcher(new PropertyHandler(""), new LogForwarder(client), null, 0, 0);
+		new LogFetcher(new PropertyHandler(""), new LogForwarder(client), null, 0, 0, false);
 	}
 	
 	private TableResultPartial createLogEntryTable() {
@@ -63,7 +63,7 @@ public class LogFetcherTest extends TestbaseAzure {
 		TableResultPartial deploymentEntries = createDeploymentTable();
 		TableResultPartial logEntries = createLogEntryTable();
 		when(azureService.getDeploymentEntries()).thenReturn(deploymentEntries);
-		when(azureService.getLogEntries(null, null)).thenReturn(logEntries);
+		when(azureService.getEntries(null, null, AzureService.WADLOGSTABLE)).thenReturn(logEntries);
 		return azureService;
 	}
 }

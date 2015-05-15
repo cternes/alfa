@@ -16,9 +16,11 @@ import de.slackspace.alfa.domain.TableResultPartial;
 
 public class AzureService {
 
+	public static final String WADLOGSTABLE = "WADLogsTable";
+	public static final String PERFORMANCETABLE = "WADPerformanceCountersTable";
+	
 	private static final Logger LOGGER = LoggerFactory.getLogger(AzureService.class);
 	private static final String DEPLOYMENTTABLE = "deployments";
-	private static final String WADLOGSTABLE = "WADLogsTable";
 	private int maxLogDays;
 	private TableContract tableContract;
 	
@@ -27,13 +29,13 @@ public class AzureService {
 		this.maxLogDays = maxLogDays;
 	}
 	
-	public TableResultPartial getLogEntries(String nextPartitionKey, String nextRowKey) {
+	public TableResultPartial getEntries(String nextPartitionKey, String nextRowKey, String tableName) {
 		try {
 			QueryEntitiesOptions options = constructFilter(nextPartitionKey, nextRowKey);
-			QueryEntitiesResult result = tableContract.queryEntities(WADLOGSTABLE, options);
+			QueryEntitiesResult result = tableContract.queryEntities(tableName, options);
 			return new TableResultPartial(result.getEntities(), result.getNextPartitionKey(), result.getNextRowKey());
 		} catch (Exception e) {
-			LOGGER.error("Could not query table " + WADLOGSTABLE + ". Error was: ", e);
+			LOGGER.error("Could not query table " + tableName + ". Error was: ", e);
 			return new TableResultPartial();
 		}
 	}

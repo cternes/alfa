@@ -14,6 +14,7 @@ public class PropertyHandler {
 	public static final String ACCOUNT_NAME = "accountName";
 	public static final String ACCOUNT_KEY = "accountKey";
 	public static final String MAX_LOG_DAYS = "maxLogDays";
+	public static final String FETCH_PERFORMANCE_COUNTERS = "fetchPerformanceCounters";
 	private static final String AZURE_STORAGE_URL = "https://%s.table.core.windows.net";
 	
 	private String propertiesFile;
