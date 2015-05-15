@@ -11,6 +11,7 @@ public class LogEntry extends AbstractEntry implements ElasticSearchEntry {
 
 	private String level;
 	private String message;
+	private String formattedMessage;
 	private String eventId;
 	private String severity;
 	
@@ -103,6 +104,7 @@ public class LogEntry extends AbstractEntry implements ElasticSearchEntry {
                 .startObject("eventId").field("type", "string").endObject()
                 .startObject("level").field("type", "long").endObject()
                 .startObject("message").field("type", "string").endObject()
+                .startObject("formattedMessage").field("type", "string").endObject()
                 .startObject("partitionKey").field("type", "long").endObject()
                 .startObject("role").field("type", "string").field("index", "not_analyzed").endObject()
                 .startObject("roleInstance").field("type", "string").field("index", "not_analyzed").endObject()
@@ -114,6 +116,14 @@ public class LogEntry extends AbstractEntry implements ElasticSearchEntry {
                 .endObject();
 		
 		return mappingBuilder;
+	}
+
+	public String getFormattedMessage() {
+		return formattedMessage;
+	}
+
+	public void setFormattedMessage(String formattedMessage) {
+		this.formattedMessage = formattedMessage;
 	}
 	
 }
