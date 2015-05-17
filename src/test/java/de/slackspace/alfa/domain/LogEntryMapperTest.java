@@ -22,7 +22,7 @@ public class LogEntryMapperTest {
 		Map<String, String> deploymentMap = new HashMap<>();
 		LogEntry entry = (LogEntry) cut.mapToEntry(entity, deploymentMap);
 		
-		Assert.assertEquals("An unexpected error occured: SqlException: Test TraceSource=WaWorkerHost.exe", entry.getMessage());
+		Assert.assertEquals("An unexpected error occured: SqlException: Test TraceSource=WaWorkerHost.exe", entry.getFormattedMessage());
 	}
 	
 	@Test
@@ -33,7 +33,7 @@ public class LogEntryMapperTest {
 		Map<String, String> deploymentMap = new HashMap<>();
 		LogEntry entry = (LogEntry) cut.mapToEntry(entity, deploymentMap);
 		
-		Assert.assertEquals("ReliableDatabaseManager - Retry #3: Exception which caused the retry: Database", entry.getMessage());
+		Assert.assertEquals("ReliableDatabaseManager - Retry #3: Exception which caused the retry: Database", entry.getFormattedMessage());
 	}
 	
 	private Entity createEntity() {
