@@ -81,3 +81,15 @@ Clone the project:
 Build the project:
 
     mvn clean package assembly:single
+
+Changes
+===
+
+###v1.0:
+
+- Still compatible with previous Alfa versions < 1.0 
+- Usage of ElasticSearch 1.5.2
+- Support for Azure SDK > 2.5
+- Support for Kibana 4.0
+- Formatted Message field supports active placeholder replacement (for Azure SDK > 2.5)
+- Performance counter fetching from Azure
