@@ -35,7 +35,8 @@ Edit the config file with your azure storage account credentials (can be found a
 | accountName.1 | The name of the azure storage | X 
 | accountKey.1 | The primary access key of the azure storage | X
 | pollingIntervalMinutes.1 | How often the azure storage will be polled in minutes (Default: 2 minutes)  | - 
-| maxLogDays.1 | The number of days in the past from which logs will be polled (Default: 10 days) | - 
+| maxLogDays.1 | The number of days in the past from which logs will be polled (Default: 10 days) | -
+| fetchPerformanceCounters.1 | True, to enable fetching of performance counters (WADPerformanceCountersTable) | - 
  
 You can define multiple accounts by increasing the number at the end of a property:
 
