@@ -80,25 +80,11 @@ public class Alfa {
 		//this will execute the logFetcher every n minutes, if a logFetcher run exceeds n minutes, 
 		//the next start will be blocked until the first one has finished 
 		for (LogFetcher logFetcher : logFetchers) {
-			ScheduledFuture<?> logFetcherHandle = scheduledExecutorService.scheduleAtFixedRate(logFetcher, 0, logFetcher.getPollingIntervalMinutes(), TimeUnit.MINUTES);
-			
-			try {
-				logFetcherHandle.get();
-			}
-			catch(Exception e) {
-				LOGGER.error("Uncaught exception", e);
-			}
+			scheduledExecutorService.scheduleAtFixedRate(logFetcher, 0, logFetcher.getPollingIntervalMinutes(), TimeUnit.MINUTES);
 		}
 		
 		//this will execute the logCleaner every 24 hours
-		ScheduledFuture<?> logCleanerHandle = scheduledExecutorService.scheduleAtFixedRate(logCleaner, 0, 24, TimeUnit.HOURS);
-		
-		try {
-			logCleanerHandle.get();
-		}
-		catch(Exception e) {
-			LOGGER.error("Uncaught exception", e);
-		}
+		scheduledExecutorService.scheduleAtFixedRate(logCleaner, 0, 24, TimeUnit.HOURS);
 	}
 
 }
