@@ -23,16 +23,17 @@ import de.slackspace.alfa.properties.PropertyHandler;
 public class LogFetcher implements Runnable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(LogFetcher.class);
-	private static final String LAST_PARTITION_KEY = "lastPartitionKey";
-	private static final String LAST_ROW_KEY = "lastRowKey";
-	private static final String LAST_PARTITION_KEY_PERFORMANCE = "lastPartitionKey_performance";
-	private static final String LAST_ROW_KEY_PERFORMANCE = "lastRowKey_performance";
+	private static final String LAST_PARTITION_KEY = PropertyHandler.LAST_PARTITION_KEY;
+	private static final String LAST_ROW_KEY = PropertyHandler.LAST_ROW_KEY;
+	private static final String LAST_PARTITION_KEY_PERFORMANCE = PropertyHandler.LAST_PARTITION_KEY_PERFORMANCE;
+	private static final String LAST_ROW_KEY_PERFORMANCE = PropertyHandler.LAST_ROW_KEY_PERFORMANCE;
 	private PropertyHandler propertyHandler;
 	private AzureService service;
 	private LogForwarder logForwarder;
 	private int instance;
 	private int pollingIntervalMinutes;
 	private boolean fetchPerformanceCounters;
+	private String accountName;
 	
 	private final LogEntryMapper logEntryMapper = new LogEntryMapper();
 	private final PerformanceCounterMapper performanceCounterMapper = new PerformanceCounterMapper();
@@ -55,6 +56,7 @@ public class LogFetcher implements Runnable {
 		this.instance = instance;
 		this.pollingIntervalMinutes = pollingIntervalMinutes;
 		this.fetchPerformanceCounters = fetchPerformanceCounters;
+		this.accountName = propertyHandler.getProperty(PropertyHandler.ACCOUNT_NAME, instance);
 	}
 	
 	public void run() {
@@ -81,16 +83,18 @@ public class LogFetcher implements Runnable {
 	
 	private void fetchAndStoreEvents(Map<String, String> deploymentMap, String name, String lastRowKeyProperty,
 			String lastPartitionKeyProperty, String storageTable, EntryMapper entryMapper) {
+		String lastRowKey = propertyHandler.getProperty(lastRowKeyProperty, instance);
+		String lastPartitionKey = propertyHandler.getProperty(lastPartitionKeyProperty, instance);
+		
 		if(LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Fetching " + name + " from " + propertyHandler.getProperty(lastRowKeyProperty, instance));
+			LOGGER.debug("[" + accountName + "] - Fetching " + name + " from " + lastRowKey);
 		}
 		
-		TableResultPartial tableResultPartial = service.getEntries(propertyHandler.getProperty(lastPartitionKeyProperty, instance),
-				propertyHandler.getProperty(lastRowKeyProperty, instance), storageTable);
+		TableResultPartial tableResultPartial = service.getEntries(lastPartitionKey, lastRowKey, storageTable);
 		removeDuplicateEvents(tableResultPartial);
 		
 		if(LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Found " + tableResultPartial.getEntryList().size() + " events.");
+			LOGGER.debug("[" + accountName + "] - Found " + tableResultPartial.getEntryList().size() + " events.");
 		}
 		
 		if(tableResultPartial.getEntryList().size() > 0) {
@@ -137,14 +141,14 @@ public class LogFetcher implements Runnable {
 		propertyHandler.writeProperties();
 		
 		if(LOGGER.isInfoEnabled()) {
-			LOGGER.info("Fetched until partition: " + propertyHandler.getProperty(lastPartitionKeyProperty, instance));
-			LOGGER.info("Fetched until row: " + propertyHandler.getProperty(lastRowKeyProperty, instance));
+			LOGGER.info("[" + accountName + "] - Fetched until partition: " + propertyHandler.getProperty(lastPartitionKeyProperty, instance));
+			LOGGER.info("[" + accountName + "] - Fetched until row: " + propertyHandler.getProperty(lastRowKeyProperty, instance));
 		}
 	}
 
 	private void storeEvents(TableResultPartial tableResultPartial, Map<String,String> deploymentMap, EntryMapper mapper) {
 		if(LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Storing events into ES...");
+			LOGGER.debug("[" + accountName + "] - Storing events into ES...");
 		}
 		
 		for (Entity entity : tableResultPartial.getEntryList()) {
@@ -153,9 +157,9 @@ public class LogFetcher implements Runnable {
 			try {
 				logForwarder.pushEvent(entry);
 			} catch (ConnectionException e) {
-				LOGGER.error("Could not write event to ES. Error was: ", e);
+				LOGGER.error("[" + accountName + "] - Could not write event to ES. Error was: ", e);
 			} catch (IOException e) {
-				LOGGER.error("Could not write create ES mapping. Error was: ", e);
+				LOGGER.error("[" + accountName + "] - Could not write create ES mapping. Error was: ", e);
 			}
 		}
 	}
