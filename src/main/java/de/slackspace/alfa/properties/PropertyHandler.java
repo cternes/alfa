@@ -15,11 +15,7 @@ public class PropertyHandler {
 	public static final String ACCOUNT_KEY = "accountKey";
 	public static final String MAX_LOG_DAYS = "maxLogDays";
 	public static final String FETCH_PERFORMANCE_COUNTERS = "fetchPerformanceCounters";
-	public static final String LAST_PARTITION_KEY = "lastPartitionKey";
-	public static final String LAST_ROW_KEY = "lastRowKey";
-	public static final String LAST_PARTITION_KEY_PERFORMANCE = "lastPartitionKey_performance";
-	public static final String LAST_ROW_KEY_PERFORMANCE = "lastRowKey_performance";
-	public static final String AZURE_STORAGE_URL = "https://%s.table.core.windows.net";
+	private static final String AZURE_STORAGE_URL = "https://%s.table.core.windows.net";
 	
 	private String propertiesFile;
 	private Properties properties = new Properties();

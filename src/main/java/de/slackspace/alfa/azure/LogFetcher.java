@@ -23,13 +23,16 @@ import de.slackspace.alfa.properties.PropertyHandler;
 public class LogFetcher implements Runnable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(LogFetcher.class);
+	private static final String LAST_PARTITION_KEY = "lastPartitionKey";
+	private static final String LAST_ROW_KEY = "lastRowKey";
+	private static final String LAST_PARTITION_KEY_PERFORMANCE = "lastPartitionKey_performance";
+	private static final String LAST_ROW_KEY_PERFORMANCE = "lastRowKey_performance";
 	private PropertyHandler propertyHandler;
 	private AzureService service;
 	private LogForwarder logForwarder;
 	private int instance;
 	private int pollingIntervalMinutes;
 	private boolean fetchPerformanceCounters;
-	private String accountName;
 	
 	private final LogEntryMapper logEntryMapper = new LogEntryMapper();
 	private final PerformanceCounterMapper performanceCounterMapper = new PerformanceCounterMapper();
@@ -52,17 +55,16 @@ public class LogFetcher implements Runnable {
 		this.instance = instance;
 		this.pollingIntervalMinutes = pollingIntervalMinutes;
 		this.fetchPerformanceCounters = fetchPerformanceCounters;
-		this.accountName = propertyHandler.getProperty(PropertyHandler.ACCOUNT_NAME, instance);
 	}
 	
 	public void run() {
 		Map<String, String> map = getDeploymentMap();
 
 		// fetch logs
-		fetchAndStoreEvents(map, "logs", AzureService.WADLOGSTABLE, logEntryMapper);
+		fetchAndStoreEvents(map, "logs", LAST_ROW_KEY, LAST_PARTITION_KEY, AzureService.WADLOGSTABLE, logEntryMapper);
 		
 		if(fetchPerformanceCounters) {
-			fetchAndStoreEvents(map, "performance counters", AzureService.PERFORMANCETABLE, performanceCounterMapper);
+			fetchAndStoreEvents(map, "performance counters", LAST_ROW_KEY_PERFORMANCE, LAST_PARTITION_KEY_PERFORMANCE, AzureService.PERFORMANCETABLE, performanceCounterMapper);
 		}
 	}
 
@@ -77,29 +79,30 @@ public class LogFetcher implements Runnable {
 		return deploymentMap;
 	}
 	
-	private void fetchAndStoreEvents(Map<String, String> deploymentMap, String name, String storageTable, EntryMapper entryMapper) {
+	private void fetchAndStoreEvents(Map<String, String> deploymentMap, String name, String lastRowKeyProperty,
+			String lastPartitionKeyProperty, String storageTable, EntryMapper entryMapper) {
 		if(LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[" + accountName + "] - Fetching " + name + " from " + propertyHandler.getProperty(PropertyHandler.LAST_ROW_KEY, instance));
+			LOGGER.debug("Fetching " + name + " from " + propertyHandler.getProperty(lastRowKeyProperty, instance));
 		}
 		
-		TableResultPartial tableResultPartial = service.getEntries(propertyHandler.getProperty(PropertyHandler.LAST_PARTITION_KEY, instance),
-				propertyHandler.getProperty(PropertyHandler.LAST_ROW_KEY, instance), storageTable);
+		TableResultPartial tableResultPartial = service.getEntries(propertyHandler.getProperty(lastPartitionKeyProperty, instance),
+				propertyHandler.getProperty(lastRowKeyProperty, instance), storageTable);
 		removeDuplicateEvents(tableResultPartial);
 		
 		if(LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[" + accountName + "] - Found " + tableResultPartial.getEntryList().size() + " events.");
+			LOGGER.debug("Found " + tableResultPartial.getEntryList().size() + " events.");
 		}
 		
 		if(tableResultPartial.getEntryList().size() > 0) {
 			storeEvents(tableResultPartial, deploymentMap, entryMapper);
-			writeTraceProperties(tableResultPartial);
+			writeTraceProperties(tableResultPartial, lastRowKeyProperty, lastPartitionKeyProperty);
 		}
 		
 		tableResultPartial.getEntryList().clear();
 		
 		//if there are more entries in the azure table fetch until reaching the end
 		if(tableResultPartial.getNextPartitionKey() != null) {
-			fetchAndStoreEvents(deploymentMap, name, storageTable, entryMapper);
+			fetchAndStoreEvents(deploymentMap, name, lastRowKeyProperty, lastPartitionKeyProperty, storageTable, entryMapper);
 		}
 		else {
 			return;
@@ -110,38 +113,38 @@ public class LogFetcher implements Runnable {
 		if(tableResultPartial.getEntryList().size() > 0) {
 			Entity firstEvent = tableResultPartial.getEntryList().get(0);
 			
-			if(firstEvent.getPartitionKey().equals(propertyHandler.getProperty(PropertyHandler.LAST_PARTITION_KEY, instance))
-					&& firstEvent.getRowKey().equals(propertyHandler.getProperty(PropertyHandler.LAST_ROW_KEY, instance))) {
+			if(firstEvent.getPartitionKey().equals(propertyHandler.getProperty(LAST_PARTITION_KEY, instance))
+					&& firstEvent.getRowKey().equals(propertyHandler.getProperty(LAST_ROW_KEY, instance))) {
 				tableResultPartial.getEntryList().remove(firstEvent);
 			}
 		}
 	}
 
-	private void writeTraceProperties(TableResultPartial tableResultPartial) {
+	private void writeTraceProperties(TableResultPartial tableResultPartial, String lastRowKeyProperty, String lastPartitionKeyProperty) {
 		//if we have reached the end of the azure table, remember the last fetched event
 		if(tableResultPartial.getNextPartitionKey() == null) {
 			Entity lastEvent = tableResultPartial.getEntryList().get(tableResultPartial.getEntryList().size() - 1);
 			
-			propertyHandler.setProperty(PropertyHandler.LAST_PARTITION_KEY, lastEvent.getPartitionKey(), instance);
-			propertyHandler.setProperty(PropertyHandler.LAST_ROW_KEY, lastEvent.getRowKey(), instance);
+			propertyHandler.setProperty(lastPartitionKeyProperty, lastEvent.getPartitionKey(), instance);
+			propertyHandler.setProperty(lastRowKeyProperty, lastEvent.getRowKey(), instance);
 		}
 		//if not at the end of the azure table, remember the partition key of the next event
 		else {
-			propertyHandler.setProperty(PropertyHandler.LAST_PARTITION_KEY, tableResultPartial.getNextPartitionKey(), instance);
-			propertyHandler.setProperty(PropertyHandler.LAST_ROW_KEY, tableResultPartial.getNextRowKey(), instance);
+			propertyHandler.setProperty(lastPartitionKeyProperty, tableResultPartial.getNextPartitionKey(), instance);
+			propertyHandler.setProperty(lastRowKeyProperty, tableResultPartial.getNextRowKey(), instance);
 		}
 		
 		propertyHandler.writeProperties();
 		
 		if(LOGGER.isInfoEnabled()) {
-			LOGGER.info("[" + accountName + "] - Fetched until partition: " + propertyHandler.getProperty(PropertyHandler.LAST_PARTITION_KEY, instance));
-			LOGGER.info("[" + accountName + "] - Fetched until row: " + propertyHandler.getProperty(PropertyHandler.LAST_ROW_KEY, instance));
+			LOGGER.info("Fetched until partition: " + propertyHandler.getProperty(lastPartitionKeyProperty, instance));
+			LOGGER.info("Fetched until row: " + propertyHandler.getProperty(lastRowKeyProperty, instance));
 		}
 	}
 
 	private void storeEvents(TableResultPartial tableResultPartial, Map<String,String> deploymentMap, EntryMapper mapper) {
 		if(LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[" + accountName + "] - Storing events into ES...");
+			LOGGER.debug("Storing events into ES...");
 		}
 		
 		for (Entity entity : tableResultPartial.getEntryList()) {
@@ -150,9 +153,9 @@ public class LogFetcher implements Runnable {
 			try {
 				logForwarder.pushEvent(entry);
 			} catch (ConnectionException e) {
-				LOGGER.error("[" + accountName + "] - Could not write event to ES. Error was: ", e);
+				LOGGER.error("Could not write event to ES. Error was: ", e);
 			} catch (IOException e) {
-				LOGGER.error("[" + accountName + "] - Could not write create ES mapping. Error was: ", e);
+				LOGGER.error("Could not write create ES mapping. Error was: ", e);
 			}
 		}
 	}
