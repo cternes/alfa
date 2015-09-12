@@ -66,12 +66,14 @@ public class LogCleaner implements Runnable {
 	private List<String> createIndicesToKeep() {
 		List<String> indicesToKeep = new ArrayList<String>();
 		indicesToKeep.add("kibana-int"); //do not delete internal kibana index
+		indicesToKeep.add(".kibana"); //do not delete internal kibana index
 		
 		for (int i = 0; i < maxKeepDays + 1; i++) {
 			Calendar cal = Calendar.getInstance();
 			cal.add(Calendar.DATE, i * -1);
 			
 			indicesToKeep.add("logs-" + DateFormatter.toYYYYMMDD(cal.getTime()));
+			indicesToKeep.add("perfcounters-" + DateFormatter.toYYYYMMDD(cal.getTime()));
 		}
 		
 		return indicesToKeep;
