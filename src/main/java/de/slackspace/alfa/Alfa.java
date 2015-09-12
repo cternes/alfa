@@ -6,11 +6,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.slackspace.alfa.azure.LogFetcher;
 import de.slackspace.alfa.elasticsearch.ElasticSearchServer;
@@ -21,7 +17,6 @@ import de.slackspace.alfa.properties.PropertyHandlerFactory;
 
 public class Alfa {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(Alfa.class);
 	private static final String ALFA_CONFIG = "conf/alfa.properties";
 	private static final String ELASTICSEARCH_CONFIG = "conf/elasticsearch-server.properties";
 	private ElasticSearchServer elasticSearchServer;
