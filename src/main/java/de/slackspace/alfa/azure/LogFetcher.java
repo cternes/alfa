@@ -87,11 +87,11 @@ public class LogFetcher implements Runnable {
 		String lastPartitionKey = propertyHandler.getProperty(lastPartitionKeyProperty, instance);
 		
 		if(LOGGER.isDebugEnabled()) {
-			LOGGER.debug("[" + accountName + "] - Fetching " + name + " from " + lastRowKey);
+			LOGGER.debug("[" + accountName + "] - Fetching " + name + " from partition: " + lastPartitionKey + " row: " + lastRowKey);
 		}
 		
 		TableResultPartial tableResultPartial = service.getEntries(lastPartitionKey, lastRowKey, storageTable);
-		removeDuplicateEvents(tableResultPartial);
+		removeDuplicateEvents(tableResultPartial, lastRowKey, lastPartitionKey);
 		
 		if(LOGGER.isDebugEnabled()) {
 			LOGGER.debug("[" + accountName + "] - Found " + tableResultPartial.getEntryList().size() + " events.");
@@ -113,12 +113,12 @@ public class LogFetcher implements Runnable {
 		}
 	}
 
-	private void removeDuplicateEvents(TableResultPartial tableResultPartial) {
+	private void removeDuplicateEvents(TableResultPartial tableResultPartial, String lastRowKey, String lastPartitionKey) {
 		if(tableResultPartial.getEntryList().size() > 0) {
 			Entity firstEvent = tableResultPartial.getEntryList().get(0);
 			
-			if(firstEvent.getPartitionKey().equals(propertyHandler.getProperty(LAST_PARTITION_KEY, instance))
-					&& firstEvent.getRowKey().equals(propertyHandler.getProperty(LAST_ROW_KEY, instance))) {
+			if(firstEvent.getPartitionKey().equals(lastRowKey)
+					&& firstEvent.getRowKey().equals(lastPartitionKey)) {
 				tableResultPartial.getEntryList().remove(firstEvent);
 			}
 		}
@@ -131,18 +131,22 @@ public class LogFetcher implements Runnable {
 			
 			propertyHandler.setProperty(lastPartitionKeyProperty, lastEvent.getPartitionKey(), instance);
 			propertyHandler.setProperty(lastRowKeyProperty, lastEvent.getRowKey(), instance);
+			LogProgressInformation(lastEvent.getRowKey(), lastEvent.getPartitionKey());
 		}
 		//if not at the end of the azure table, remember the partition key of the next event
 		else {
 			propertyHandler.setProperty(lastPartitionKeyProperty, tableResultPartial.getNextPartitionKey(), instance);
 			propertyHandler.setProperty(lastRowKeyProperty, tableResultPartial.getNextRowKey(), instance);
+			LogProgressInformation(tableResultPartial.getNextRowKey(), tableResultPartial.getNextPartitionKey());
 		}
 		
 		propertyHandler.writeProperties();
-		
+	}
+
+	private void LogProgressInformation(String lastRowKey, String lastPartitionKey) {
 		if(LOGGER.isInfoEnabled()) {
-			LOGGER.info("[" + accountName + "] - Fetched until partition: " + propertyHandler.getProperty(lastPartitionKeyProperty, instance));
-			LOGGER.info("[" + accountName + "] - Fetched until row: " + propertyHandler.getProperty(lastRowKeyProperty, instance));
+			LOGGER.info("[" + accountName + "] - Fetched until partition: " + lastPartitionKey);
+			LOGGER.info("[" + accountName + "] - Fetched until row: " + lastRowKey);
 		}
 	}
 
