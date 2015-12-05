@@ -60,13 +60,18 @@ public class LogFetcher implements Runnable {
 	}
 	
 	public void run() {
-		Map<String, String> map = getDeploymentMap();
-
-		// fetch logs
-		fetchAndStoreEvents(map, "logs", LAST_ROW_KEY, LAST_PARTITION_KEY, AzureService.WADLOGSTABLE, logEntryMapper);
-		
-		if(fetchPerformanceCounters) {
-			fetchAndStoreEvents(map, "performance counters", LAST_ROW_KEY_PERFORMANCE, LAST_PARTITION_KEY_PERFORMANCE, AzureService.PERFORMANCETABLE, performanceCounterMapper);
+		try {
+			Map<String, String> map = getDeploymentMap();
+			
+			// fetch logs
+			fetchAndStoreEvents(map, "logs", LAST_ROW_KEY, LAST_PARTITION_KEY, AzureService.WADLOGSTABLE, logEntryMapper);
+			
+			if(fetchPerformanceCounters) {
+				fetchAndStoreEvents(map, "performance counters", LAST_ROW_KEY_PERFORMANCE, LAST_PARTITION_KEY_PERFORMANCE, AzureService.PERFORMANCETABLE, performanceCounterMapper);
+			}
+		}
+		catch(Throwable t) {
+			LOGGER.error("An error occurred during fetching logs. Error was: ", t);
 		}
 	}
 

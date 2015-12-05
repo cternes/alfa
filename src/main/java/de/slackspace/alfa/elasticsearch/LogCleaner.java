@@ -60,7 +60,12 @@ public class LogCleaner implements Runnable {
 
 	@Override
 	public void run() {
-		deleteOldLogs();
+		try {
+			deleteOldLogs();
+		}
+		catch(Throwable t) {
+			LOGGER.error("An error occurred during cleaning old logs. Error was: ", t);
+		}
 	}
 	
 	private List<String> createIndicesToKeep() {
