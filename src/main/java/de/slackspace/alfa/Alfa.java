@@ -20,17 +20,15 @@ public class Alfa {
 	private static final String ALFA_CONFIG = "conf/alfa.properties";
 	private static final String ELASTICSEARCH_CONFIG = "conf/elasticsearch-server.properties";
 	private ElasticSearchServer elasticSearchServer;
-	private List<LogFetcher> logFetchers;
-	private LogCleaner logCleaner;
 	
 	public void start(boolean runAsService) throws IOException, ConnectionException {
 		startElasticSearchServer(runAsService);
 		
 		String configFile = getAlfaConfig(runAsService);
 		
-		initializeLogFetcher(configFile);
-		initializeLogCleaner(configFile);
-		fetchAndStoreLogs();
+		List<LogFetcher> logFetchers = initializeLogFetcher(configFile);
+		LogCleaner logCleaner = initializeLogCleaner(configFile);
+		fetchAndStoreLogs(logFetchers, logCleaner);
 	}
 	
 	public void stop() {
@@ -39,13 +37,13 @@ public class Alfa {
 		}
 	}
 
-	private void initializeLogFetcher(String configFile) throws ConnectionException {
-		this.logFetchers = ObjectFactory.constructLogFetcher(configFile, elasticSearchServer.getClient());
+	private List<LogFetcher> initializeLogFetcher(String configFile) throws ConnectionException {
+		return ObjectFactory.constructLogFetcher(configFile, elasticSearchServer.getClient());
 	}
 
-	private void initializeLogCleaner(String configFile) {
+	private LogCleaner initializeLogCleaner(String configFile) {
 		PropertyHandler propertyHandler = PropertyHandlerFactory.createPropertyHandler(configFile);
-		this.logCleaner = ObjectFactory.constructLogCleaner(propertyHandler, elasticSearchServer.getClient());
+		return ObjectFactory.constructLogCleaner(propertyHandler, elasticSearchServer.getClient());
 	}
 	
 	private String getAlfaConfig(boolean runAsService) {
@@ -69,7 +67,7 @@ public class Alfa {
 		elasticSearchServer.start();
 	}
 	
-	private void fetchAndStoreLogs() {
+	public void fetchAndStoreLogs(List<LogFetcher> logFetchers, LogCleaner logCleaner) {
 		ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(logFetchers.size());
 		
 		//this will execute the logFetcher every n minutes, if a logFetcher run exceeds n minutes, 
