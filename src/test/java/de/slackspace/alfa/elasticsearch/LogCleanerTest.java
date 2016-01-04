@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.elasticsearch.action.ActionFuture;
+import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
@@ -102,10 +103,10 @@ public class LogCleanerTest {
 		// verify deleted indices
 		List<DeleteIndexRequest> callList = argumentCaptor.getAllValues();
 		DeleteIndexRequest firstDeleteRequest = callList.get(0);
-		assertThat(firstDeleteRequest.indices()[0], equalTo("perfcounters-2014.09.12"));
+		assertThat(firstDeleteRequest.indices()[0], equalTo("perfcounters-" + DateFormatter.toYYYYMMDD(cal.getTime())));
 
 		DeleteIndexRequest secondDeleteRequest = callList.get(1);
-		assertThat(secondDeleteRequest.indices()[0], equalTo("logs-2014.09.12"));
+		assertThat(secondDeleteRequest.indices()[0], equalTo("logs-" + DateFormatter.toYYYYMMDD(cal.getTime())));
 	}
 	
 	private void SetupMocks(Client client, IndicesAdminClient indicesAdminClient, ImmutableOpenMap<String, IndexMetaData> indicesMap) {
@@ -121,7 +122,7 @@ public class LogCleanerTest {
 		when(client.admin()).thenReturn(adminClient);
 		when(adminClient.indices()).thenReturn(indicesAdminClient);
 		when(adminClient.cluster()).thenReturn(clusterAdminClient);
-		when(clusterAdminClient.state(Mockito.any())).thenReturn(actionFuture);
+		when(clusterAdminClient.state(Mockito.any(ClusterStateRequest.class))).thenReturn(actionFuture);
 		when(actionFuture.actionGet()).thenReturn(response);
 		when(response.getState()).thenReturn(state);
 		when(state.getMetaData()).thenReturn(metaData);
