@@ -1,3 +1,5 @@
+https://travis-ci.org/cternes/alfa.svg?branch=master
+
 Azure Logfile Analyzer
 ====
 
