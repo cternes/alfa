@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/cternes/alfa.svg?branch=master)(https://travis-ci.org/cternes/alfa)
+[![Build Status](https://travis-ci.org/cternes/alfa.svg?branch=master)](https://travis-ci.org/cternes/alfa)
 
 Azure Logfile Analyzer
 ====
