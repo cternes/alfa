@@ -1,12 +1,18 @@
 package de.slackspace.alfa.domain;
 
 import java.util.Map;
+import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.microsoft.windowsazure.services.table.models.Entity;
 
 import de.slackspace.alfa.date.DateFormatter;
 
 public class LogEntryMapper implements EntryMapper {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(LogEntryMapper.class);
 	
 	@Override
 	public ElasticSearchEntry mapToEntry(Entity entity, Map<String, String> deploymentMap) {
@@ -29,14 +35,22 @@ public class LogEntryMapper implements EntryMapper {
 		entry.setMessage(message);
 
 		// format message to avoid ugly messages (Azure SDK >2.5)
-		if(message.startsWith("EventName=")) {
-			entry.setFormattedMessage(replacePlaceholders(message));
+		try {
+			if(message.startsWith("EventName=")) {
+				entry.setFormattedMessage(replacePlaceholders(message));
+			}	
+		}
+		catch(Exception e) {
+			LOGGER.error("Could not replace placeholders in message '" + message + "'. Leaving message as is.", e);
+			entry.setFormattedMessage(message);
 		}
 		
 		return entry;
 	}
 	
-	public String replacePlaceholders(String msg) {
+	public String replacePlaceholders(String originalMsg) {
+		String msg = originalMsg;
+		
 		// remove everything until the second =
 		int firstEqualIdx = msg.indexOf("=");
 		int secondEqualIdx = msg.indexOf("=", firstEqualIdx + 1);
@@ -65,7 +79,7 @@ public class LogEntryMapper implements EntryMapper {
 				msg = msg.replace("Argument" + i + "=", "");
 				
 				// remove argument value from msg
-				msg = msg.replace("\"" + argumentValue + "\"", "");
+				msg = msg.replaceFirst(Pattern.quote("\"" + argumentValue + "\""), "");
 				
 				// replace placeholder with argument value
 				msg = msg.replace("{" + i + "}", argumentValue);
@@ -74,6 +88,9 @@ public class LogEntryMapper implements EntryMapper {
 		
 		// remove quotes
 		msg = msg.replace("\"", "");
+		
+		// remove WaWorkerHost
+		msg = msg.replace("TraceSource=WaWorkerHost.exe", "");
 		
 		return msg.trim();
 	}
