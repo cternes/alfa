@@ -1,12 +1,14 @@
 package de.slackspace.alfa.elasticsearch;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -102,11 +104,15 @@ public class LogCleanerTest {
 		
 		// verify deleted indices
 		List<DeleteIndexRequest> callList = argumentCaptor.getAllValues();
-		DeleteIndexRequest firstDeleteRequest = callList.get(0);
-		assertThat(firstDeleteRequest.indices()[0], equalTo("perfcounters-" + DateFormatter.toYYYYMMDD(cal.getTime())));
-
-		DeleteIndexRequest secondDeleteRequest = callList.get(1);
-		assertThat(secondDeleteRequest.indices()[0], equalTo("logs-" + DateFormatter.toYYYYMMDD(cal.getTime())));
+		assertThat(callList.size(), equalTo(2));
+		
+		List<String> indicesToDelete = new ArrayList<>();
+		for (DeleteIndexRequest deleteIndexRequest : callList) {
+			indicesToDelete.add(deleteIndexRequest.indices()[0]);
+		}
+		
+		assertThat(indicesToDelete, hasItem("perfcounters-" + DateFormatter.toYYYYMMDD(cal.getTime())));
+		assertThat(indicesToDelete, hasItem("logs-" + DateFormatter.toYYYYMMDD(cal.getTime())));
 	}
 	
 	private void SetupMocks(Client client, IndicesAdminClient indicesAdminClient, ImmutableOpenMap<String, IndexMetaData> indicesMap) {
