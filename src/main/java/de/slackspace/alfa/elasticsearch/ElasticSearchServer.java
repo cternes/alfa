@@ -8,7 +8,7 @@ import java.util.Properties;
 
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
@@ -30,7 +30,7 @@ public class ElasticSearchServer {
         	LOGGER.info("Starting the Elastic Search server node");
         }
  
-        final ImmutableSettings.Builder builder = ImmutableSettings.settingsBuilder().put(configuration);
+        final Settings.Builder builder = Settings.settingsBuilder().put(configuration);
         server = NodeBuilder.nodeBuilder().settings(builder).build();
  
         if (LOGGER.isInfoEnabled()) {

@@ -38,7 +38,6 @@ public class LogForwarder {
 		
 		client.prepareIndex(index, entry.getType())
                 .setSource(json)
-                .setOperationThreaded(false)
                 .execute()
                 .actionGet();
 	}
